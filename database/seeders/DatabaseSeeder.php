@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Rol;
 use App\Models\User;
+use App\Models\Hospital; // Importar el modelo de Hospital
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -20,7 +21,19 @@ class DatabaseSeeder extends Seeder
             ['descripcion' => 'Usuario con todos los permisos']
         );
 
-        // Crear usuario admin si no existe
+        // Crear un hospital si no existe (puedes modificar estos datos)
+        $hospital = Hospital::firstOrCreate(
+            ['nombre' => 'Hospital Principal'],
+            [
+                'departamento' => 'Departamento Central',
+                'direccion'    => 'Calle Principal 123',
+                'nivel'        => 'Nivel 1',
+                'tipo'         => 'General',
+                'telefono'     => 123456789
+            ]
+        );
+
+        // Crear usuario admin y asociarlo al hospital
         User::firstOrCreate(
             ['email' => 'admin@hospital.com'],
             [
@@ -29,6 +42,7 @@ class DatabaseSeeder extends Seeder
                 'telefono'  => 77777777,
                 'password'  => Hash::make('12345678'), // <-- contraseña segura
                 'rol_id'    => $adminRol->id,
+                'hospital_id' => $hospital->id, // Asociar el hospital al usuario
             ]
         );
     }

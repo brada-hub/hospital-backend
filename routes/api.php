@@ -23,10 +23,13 @@ use App\Http\Controllers\{
     CuidadoAplicadoController
 };
 
+
 // Rutas públicas (ping, login, registro)
 Route::get('/ping', fn () => response()->json(['pong' => true]));
 Route::post('/login', [UserController::class, 'login']);
 Route::post('/register', [UserController::class, 'store']);
+// En web.php o api.php
+Route::get('/hospital-details/{id}', [HospitalController::class, 'getHospitalDetails']);
 
 // Rutas protegidas con Sanctum
 Route::middleware('auth:sanctum')->group(function () {
@@ -57,3 +60,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // Logout
     Route::post('/logout', [UserController::class, 'logout']);
 });
+// routes/api.php
+

@@ -27,6 +27,7 @@ class UserController extends Controller
             'email'     => 'required|string|email|max:100|unique:users',
             'password'  => 'required|string|min:8',
             'rol_id'    => 'required|exists:rols,id',
+            'hospital_id' => 'required|exists:hospitals,id',
         ]);
 
         // Encriptar contraseña
@@ -117,5 +118,6 @@ public function logout(Request $request)
         'message' => 'Sesión cerrada correctamente'
     ], 200);
 }
+
 
 }
