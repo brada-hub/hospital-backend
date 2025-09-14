@@ -23,7 +23,10 @@ class Sala extends Model
     {
         return $this->belongsTo(Especialidad::class);
     }
-
+    public function camas()
+{
+    return $this->hasMany(Cama::class);
+}
     protected static function booted()
     {
         static::created(fn($s) => Log::info('Sala creada', $s->toArray()));

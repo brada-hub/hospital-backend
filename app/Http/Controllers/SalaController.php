@@ -29,9 +29,10 @@ class SalaController extends Controller
     }
 
     public function show($id)
-    {
-        return Sala::with('especialidad')->findOrFail($id);
-    }
+{
+    return Sala::with(['especialidad', 'camas'])->findOrFail($id);
+}
+
 
     public function update(Request $request, $id)
     {
