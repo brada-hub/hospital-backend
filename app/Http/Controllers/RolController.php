@@ -11,7 +11,7 @@ class RolController extends Controller
 {
     public function index()
     {
-        return response()->json(Rol::all(), 200);
+        return response()->json(Rol::with('permissions')->get(), 200);
     }
 
     public function store(Request $request)
@@ -29,7 +29,7 @@ class RolController extends Controller
 
     public function show($id)
     {
-        $rol = Rol::findOrFail($id);
+        $rol = Rol::with('permissions')->findOrFail($id);
         return response()->json($rol, 200);
     }
 
@@ -47,7 +47,15 @@ class RolController extends Controller
         Log::info("Rol actualizado", ['rol' => $rol]);
         return response()->json($rol, 200);
     }
+      // Nuevo método para sincronizar permisos
+    public function syncPermissions(Request $request, Rol $rol)
+    {
+        $request->validate(['permissions' => 'array']);
 
+        $rol->permissions()->sync($request->permissions);
+        Log::info("Permisos del rol '{$rol->nombre}' sincronizados.");
+        return response()->json($rol->load('permissions'), 200);
+    }
     public function destroy($id)
     {
         $rol = Rol::findOrFail($id);

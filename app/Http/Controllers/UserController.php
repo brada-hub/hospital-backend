@@ -14,8 +14,28 @@ class UserController extends Controller
     public function index()
     {
         // Lista paginada de usuarios con su rol
-        $users = User::with('rol')->paginate(10);
+       // 📌 CORRECCIÓN: Se carga la relación 'permissions'
+        $users = User::with('rol.permissions', 'permissions')->paginate(10);
         return response()->json($users, 200);
+    }
+    // Nuevo método para sincronizar permisos individuales
+     public function syncPermissions(Request $request, User $user)
+    {
+        $request->validate([
+            'permissions' => 'array',
+            'permissions.*.id' => 'required|exists:permissions,id',
+            'permissions.*.estado' => 'required|in:permitido,denegado',
+        ]);
+
+        // Formatear los datos de forma correcta para sync()
+        $permissionsToSync = collect($request->permissions)->mapWithKeys(function ($item) {
+            return [$item['id'] => ['estado' => $item['estado']]];
+        })->toArray();
+
+        $user->permissions()->sync($permissionsToSync);
+        Log::info("Permisos individuales del usuario '{$user->email}' sincronizados.");
+
+        return response()->json($user->load('permissions'), 200);
     }
 
     public function store(Request $request)
@@ -41,7 +61,8 @@ class UserController extends Controller
 
     public function show($id)
     {
-        $user = User::with('rol')->findOrFail($id);
+        // 📌 CORRECCIÓN: Se carga la relación 'permissions'
+        $user = User::with('rol.permissions', 'permissions')->findOrFail($id);
         return response()->json($user, 200);
     }
 
@@ -78,10 +99,10 @@ class UserController extends Controller
         Log::warning("Usuario eliminado", ['id' => $id]);
         return response()->noContent(); // 204
     }
-   public function login(Request $request)
+  public function login(Request $request)
 {
     $request->validate([
-        'email' => 'required|email',
+        'email'    => 'required|email',
         'password' => 'required|string',
     ]);
 
@@ -93,20 +114,24 @@ class UserController extends Controller
         ], 429);
     }
 
-    if (!Auth::attempt($request->only('email','password'))) {
-        RateLimiter::hit($key, 60); // bloquea 60s
+    if (!Auth::attempt($request->only('email', 'password'))) {
+        RateLimiter::hit($key, 60);
         return response()->json(['message' => 'Credenciales incorrectas'], 401);
     }
 
     RateLimiter::clear($key);
 
     $user = Auth::user();
+
+    // 📌 CORRECCIÓN: Cargamos los permisos del rol y del usuario al loguearse
+    $user->load('rol.permissions', 'permissions');
+
     $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
         'access_token' => $token,
-        'token_type' => 'Bearer',
-        'user' => $user
+        'token_type'   => 'Bearer',
+        'user'         => $user
     ]);
 }
 public function logout(Request $request)

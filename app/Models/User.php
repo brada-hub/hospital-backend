@@ -41,5 +41,27 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Rol::class, 'rol_id');
     }
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions')->withPivot('estado');
+    }
+
+    public function hasPermission(string $permission)
+    {
+        // 1. Verificar si el permiso está explícitamente negado para este usuario
+        $userPermission = $this->permissions->firstWhere('nombre', $permission);
+        if ($userPermission && $userPermission->pivot->estado === 'denegado') {
+            return false;
+        }
+
+        // 2. Si el permiso está explícitamente permitido, otorgar acceso
+        if ($userPermission && $userPermission->pivot->estado === 'permitido') {
+            return true;
+        }
+
+        // 3. Si no hay una configuración individual, verificar el permiso del rol
+        return $this->rol->permissions->contains('nombre', $permission);
+    }
 }
+
 

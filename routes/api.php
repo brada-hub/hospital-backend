@@ -3,6 +3,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     RolController,
     UserController,
+    PermissionController,
     PacienteController,
     InternacionController,
     MedicamentoController,
@@ -59,6 +60,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Logout
     Route::post('/logout', [UserController::class, 'logout']);
+
+     // Nuevas rutas de Permisos
+    Route::apiResource('permissions', PermissionController::class);
+
+    // Rutas actualizadas para Roles
+    Route::apiResource('rols', RolController::class);
+    Route::put('/rols/{rol}/permissions', [RolController::class, 'syncPermissions']);
+
+    // Rutas actualizadas para Usuarios
+    Route::apiResource('users', UserController::class);
+    Route::put('/users/{user}/permissions', [UserController::class, 'syncPermissions']);
 });
+
 // routes/api.php
 

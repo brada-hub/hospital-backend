@@ -16,11 +16,12 @@ class SalaController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre'           => 'required|string|max:100|unique:salas,nombre',
-            'tipo'             => 'required|string|max:50',
-            'estado'           => 'required|string|max:50',
-            'especialidad_id'  => 'required|exists:especialidads,id',
-        ]);
+        'nombre'           => 'required|string|max:100|unique:salas,nombre',
+        'tipo'             => 'required|string|max:50',
+        'estado'           => 'required|string|in:activo,inactivo',
+        'especialidad_id'  => 'required|exists:especialidads,id', // 👈 corregido
+    ]);
+
 
         $sala = Sala::create($data);
         Log::info('Sala registrada', ['id' => $sala->id]);
@@ -51,12 +52,13 @@ class SalaController extends Controller
         return response()->json($sala, 200);
     }
 
-    public function destroy($id)
+    public function destroy(Sala $sala)
     {
-        $sala = Sala::findOrFail($id);
-        $sala->delete();
+        $sala->update(['estado' => $sala->estado === 'activo' ? 'inactivo' : 'activo']);
 
-        Log::warning('Sala eliminada', ['id' => $id]);
-        return response()->noContent();
+        return response()->json([
+            'message' => 'Estado de la sala actualizado',
+            'sala'    => $sala
+        ], 200);
     }
 }

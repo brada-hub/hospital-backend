@@ -17,7 +17,10 @@ class Rol extends Model
     {
         return $this->hasMany(User::class, 'rol_id'); // relación correcta con users
     }
-
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'role_permissions');
+    }
     protected static function booted()
     {
         static::created(function ($rol) {
