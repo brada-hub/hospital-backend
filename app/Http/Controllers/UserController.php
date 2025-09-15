@@ -124,7 +124,7 @@ class UserController extends Controller
     $user = Auth::user();
 
     // 📌 CORRECCIÓN: Cargamos los permisos del rol y del usuario al loguearse
-    $user->load('rol.permissions', 'permissions');
+      $user->load('rol.permissions', 'permissions', 'hospital');
 
     $token = $user->createToken('auth_token')->plainTextToken;
 

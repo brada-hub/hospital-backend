@@ -11,9 +11,7 @@ class HospitalController extends Controller
 {
     public function index()
     {
-        // Obtener el hospital asociado al usuario autenticado
-        $user = Auth::user();
-        return $user->hospital; // Retorna solo el hospital asociado al usuario
+      return Auth::user()->hospital;
     }
 
     public function store(Request $request)
