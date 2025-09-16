@@ -37,6 +37,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Roles y usuarios
     Route::apiResource('roles', RolController::class);
     Route::apiResource('usuarios', UserController::class);
+    Route::patch('/users/{user}/estado', [UserController::class, 'toggleEstado']);
+    Route::get('/me', [UserController::class, 'me']);
 
     // Recursos hospitalarios
     Route::apiResource('pacientes', PacienteController::class);
