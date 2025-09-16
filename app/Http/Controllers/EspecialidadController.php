@@ -18,7 +18,8 @@ class EspecialidadController extends Controller
         $data = $request->validate([
             'nombre'      => 'required|string|max:100|unique:especialidads,nombre',
             'descripcion' => 'nullable|string|max:255',
-            'estado'      => 'required|string|max:50',
+            // CAMBIADO: La validación ahora es para un booleano (acepta 1, 0, true, false).
+            'estado'      => 'required|boolean',
             'hospital_id' => 'required|exists:hospitals,id',
         ]);
 
@@ -40,7 +41,8 @@ class EspecialidadController extends Controller
         $data = $request->validate([
             'nombre'      => 'required|string|max:100|unique:especialidads,nombre,' . $especialidad->id,
             'descripcion' => 'nullable|string|max:255',
-            'estado'      => 'required|string|max:50',
+            // CAMBIADO: La validación ahora es para un booleano.
+            'estado'      => 'required|boolean',
             'hospital_id' => 'required|exists:hospitals,id',
         ]);
 
@@ -53,9 +55,15 @@ class EspecialidadController extends Controller
     public function destroy($id)
     {
         $especialidad = Especialidad::findOrFail($id);
-        $especialidad->delete();
 
-        Log::warning('Especialidad eliminada', ['id' => $id]);
-        return response()->noContent();
+        // CAMBIADO: En lugar de borrar, ahora alterna el estado (activo/inactivo).
+        $especialidad->update(['estado' => !$especialidad->estado]);
+
+        Log::warning('Estado de la especialidad actualizado', ['id' => $id]);
+
+        return response()->json([
+            'message' => 'Estado de la especialidad actualizado',
+            'especialidad' => $especialidad,
+        ], 200);
     }
 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->string('descripcion')->nullable();
-            $table->string('estado');
+            $table->boolean('estado')->default(1);
             $table->foreignId('hospital_id')->constrained('hospitals')->onDelete('cascade');
             $table->timestamps();
         });

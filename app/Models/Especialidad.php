@@ -1,10 +1,12 @@
 <?php
+// En: app/Models/Especialidad.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Especialidad extends Model
 {
@@ -19,15 +21,25 @@ class Especialidad extends Model
         'hospital_id',
     ];
 
+    /**
+     * AÑADIDO: Le dice a Eloquent que el campo 'estado' es un booleano.
+     */
+    protected $casts = [
+        'estado' => 'boolean',
+    ];
+
     public function hospital()
     {
         return $this->belongsTo(Hospital::class);
     }
 
-    protected static function booted()
+    public function salas(): HasMany
     {
-        static::created(fn($e) => Log::info('Especialidad creada', $e->toArray()));
-        static::updated(fn($e) => Log::info('Especialidad actualizada', $e->toArray()));
-        static::deleted(fn($e) => Log::info('Especialidad eliminada', $e->toArray()));
+        return $this->hasMany(Sala::class, 'especialidad_id');
+    }
+
+    public function camas(): HasManyThrough
+    {
+        return $this->hasManyThrough(Cama::class, Sala::class);
     }
 }

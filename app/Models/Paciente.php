@@ -22,7 +22,9 @@ class Paciente extends Model
         'direccion',
         'estado'
     ];
-
+    protected $casts = [
+        'estado' => 'boolean',
+    ];
     protected static function booted()
     {
         static::created(fn($p) => Log::info('Paciente creado', $p->toArray()));

@@ -6,6 +6,7 @@ use App\Models\Sala;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+
 class SalaController extends Controller
 {
     public function index()
@@ -16,12 +17,12 @@ class SalaController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-        'nombre'           => 'required|string|max:100|unique:salas,nombre',
-        'tipo'             => 'required|string|max:50',
-        'estado'           => 'required|string|in:activo,inactivo',
-        'especialidad_id'  => 'required|exists:especialidads,id', // 👈 corregido
-    ]);
-
+            'nombre'          => 'required|string|max:100|unique:salas,nombre',
+            'tipo'            => 'required|string|max:50',
+            // CAMBIADO: La validación ahora es para un booleano (acepta 1, 0, true, false).
+            'estado'          => 'required|boolean',
+            'especialidad_id' => 'required|exists:especialidads,id',
+        ]);
 
         $sala = Sala::create($data);
         Log::info('Sala registrada', ['id' => $sala->id]);
@@ -30,20 +31,20 @@ class SalaController extends Controller
     }
 
     public function show($id)
-{
-    return Sala::with(['especialidad', 'camas'])->findOrFail($id);
-}
-
+    {
+        return Sala::with(['especialidad', 'camas'])->findOrFail($id);
+    }
 
     public function update(Request $request, $id)
     {
         $sala = Sala::findOrFail($id);
 
         $data = $request->validate([
-            'nombre'           => 'required|string|max:100|unique:salas,nombre,' . $sala->id,
-            'tipo'             => 'required|string|max:50',
-            'estado'           => 'required|string|max:50',
-            'especialidad_id'  => 'required|exists:especialidads,id',
+            'nombre'          => 'required|string|max:100|unique:salas,nombre,' . $sala->id,
+            'tipo'            => 'required|string|max:50',
+            // CAMBIADO: La validación ahora es para un booleano.
+            'estado'          => 'required|boolean',
+            'especialidad_id' => 'required|exists:especialidads,id',
         ]);
 
         $sala->update($data);
@@ -54,7 +55,8 @@ class SalaController extends Controller
 
     public function destroy(Sala $sala)
     {
-        $sala->update(['estado' => $sala->estado === 'activo' ? 'inactivo' : 'activo']);
+        // CAMBIADO: La lógica para alternar el estado es ahora súper simple.
+        $sala->update(['estado' => !$sala->estado]);
 
         return response()->json([
             'message' => 'Estado de la sala actualizado',

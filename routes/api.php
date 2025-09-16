@@ -21,7 +21,9 @@ use App\Http\Controllers\{
     OcupacionController,
     RecetaController,
     AdministraController,
-    CuidadoAplicadoController
+    CuidadoAplicadoController,
+    DashboardController,
+    AdmisionController
 };
 
 
@@ -59,7 +61,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('recetas', RecetaController::class);
     Route::apiResource('administraciones', AdministraController::class);
     Route::apiResource('cuidados-aplicados', CuidadoAplicadoController::class);
-
+       // ✅ AÑADIR ESTAS 3 RUTAS PARA EL MÓDULO DE ADMISIÓN
+    Route::get('/camas-disponibles', [CamaController::class, 'getDisponibles']);
+    Route::get('/pacientes/buscar', [PacienteController::class, 'buscar']);
+    Route::post('/admisiones', [AdmisionController::class, 'store']);
     // Logout
     Route::post('/logout', [UserController::class, 'logout']);
 
@@ -73,6 +78,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rutas actualizadas para Usuarios
     Route::apiResource('users', UserController::class);
     Route::put('/users/{user}/permissions', [UserController::class, 'syncPermissions']);
+    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::get('/kpis', [DashboardController::class, 'getKpis'])->name('kpis');
+        Route::get('/ocupacion-especialidad', [DashboardController::class, 'getOcupacionPorEspecialidad'])->name('ocupacion-especialidad');
+        Route::get('/estado-camas', [DashboardController::class, 'getEstadoCamas'])->name('estado-camas');
+        Route::get('/ultimos-ingresos', [DashboardController::class, 'getUltimosIngresos'])->name('ultimos-ingresos');
+    });
 });
 
 // routes/api.php

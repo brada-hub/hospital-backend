@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->string('tipo');
-            $table->string('estado');
+            $table->boolean('estado')->default(1);
             $table->foreignId('especialidad_id')->constrained('especialidads')->onDelete('cascade');
             $table->timestamps();
         });

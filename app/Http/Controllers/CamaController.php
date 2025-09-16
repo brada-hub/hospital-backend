@@ -16,10 +16,13 @@ class CamaController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre'   => 'required|string|max:100|unique:camas,nombre',
-            'tipo'     => 'required|string|max:50',
-            'estado'   => 'required|string|max:50',
-            'sala_id'  => 'required|exists:salas,id',
+            'nombre'         => 'required|string|max:100|unique:camas,nombre',
+            'tipo'           => 'required|string|max:50',
+            // CAMBIADO: Validación para un booleano (0 o 1).
+            'estado'         => 'required|boolean',
+            // AÑADIDO: Validación para 'disponibilidad', solo acepta 0, 1 o 2.
+            'disponibilidad' => 'required|integer|in:0,1,2',
+            'sala_id'        => 'required|exists:salas,id',
         ]);
 
         $cama = Cama::create($data);
@@ -38,10 +41,13 @@ class CamaController extends Controller
         $cama = Cama::findOrFail($id);
 
         $data = $request->validate([
-            'nombre'   => 'required|string|max:100|unique:camas,nombre,' . $cama->id,
-            'tipo'     => 'required|string|max:50',
-            'estado'   => 'required|string|max:50',
-            'sala_id'  => 'required|exists:salas,id',
+            'nombre'         => 'required|string|max:100|unique:camas,nombre,' . $cama->id,
+            'tipo'           => 'required|string|max:50',
+            // CAMBIADO: Validación para un booleano.
+            'estado'         => 'required|boolean',
+            // AÑADIDO: Validación para 'disponibilidad'.
+            'disponibilidad' => 'required|integer|in:0,1,2',
+            'sala_id'        => 'required|exists:salas,id',
         ]);
 
         $cama->update($data);
@@ -53,9 +59,32 @@ class CamaController extends Controller
     public function destroy($id)
     {
         $cama = Cama::findOrFail($id);
-        $cama->delete();
 
-        Log::warning('Cama eliminada', ['id' => $id]);
-        return response()->noContent();
+        // CAMBIADO: En lugar de borrar, ahora alterna el estado (activo/inactivo).
+        $cama->update(['estado' => !$cama->estado]);
+
+        Log::warning('Estado de la cama actualizado', ['id' => $id]);
+
+        return response()->json([
+            'message' => 'Estado de la cama actualizado',
+            'cama' => $cama
+        ], 200);
     }
+    public function getDisponibles(Request $request)
+{
+    $query = Cama::query();
+
+    // Criterio: Solo camas activas y disponibles.
+    $query->where('estado', 1)->where('disponibilidad', 1);
+
+    // Permite filtrar por especialidad si el frontend envía el ID.
+    if ($request->has('especialidad_id')) {
+        $query->whereHas('sala', function ($q) use ($request) {
+            $q->where('especialidad_id', $request->especialidad_id);
+        });
+    }
+
+    return $query->with('sala.especialidad')->get();
+}
+
 }

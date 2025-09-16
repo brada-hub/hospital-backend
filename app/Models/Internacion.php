@@ -26,6 +26,10 @@ class Internacion extends Model
         return $this->belongsTo(Paciente::class);
     }
 
+public function ocupaciones() {
+    return $this->hasMany(Ocupacion::class, 'internacion_id');
+}
+
     protected static function booted()
     {
         static::created(fn($i) => Log::info('Internación creada', $i->toArray()));

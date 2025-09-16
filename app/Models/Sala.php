@@ -19,14 +19,23 @@ class Sala extends Model
         'especialidad_id',
     ];
 
+    /**
+     * AÑADIDO: Le dice a Eloquent que el campo 'estado' es un booleano.
+     */
+    protected $casts = [
+        'estado' => 'boolean',
+    ];
+
     public function especialidad()
     {
         return $this->belongsTo(Especialidad::class);
     }
+
     public function camas()
-{
-    return $this->hasMany(Cama::class);
-}
+    {
+        return $this->hasMany(Cama::class);
+    }
+
     protected static function booted()
     {
         static::created(fn($s) => Log::info('Sala creada', $s->toArray()));
