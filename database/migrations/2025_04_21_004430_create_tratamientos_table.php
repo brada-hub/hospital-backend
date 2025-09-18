@@ -19,7 +19,7 @@ return new class extends Migration
             $table->dateTime('fecha_fin');
             $table->string('observaciones')->nullable();
             $table->foreignId('internacion_id')->constrained('internacions')->onDelete('cascade');
-
+            $table->foreignId('user_id')->comment('ID del médico que prescribe')->constrained('users');
             $table->timestamps();
         });
     }

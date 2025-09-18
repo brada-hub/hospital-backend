@@ -11,7 +11,11 @@ class SalaController extends Controller
 {
     public function index()
     {
-        return Sala::with('especialidad')->get();
+        // ESTA ES LA VERSIÓN A PRUEBA DE BALAS
+        // Se asegura de traer las salas con su especialidad y filtra solo las activas.
+        return Sala::with('especialidad')
+            ->where('estado', 1) // Filtra explícitamente solo las salas activas
+            ->get();
     }
 
     public function store(Request $request)

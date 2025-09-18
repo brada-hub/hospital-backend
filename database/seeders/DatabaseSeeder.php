@@ -63,6 +63,8 @@ class DatabaseSeeder extends Seeder
             ['nombre' => 'acceso.dashboard', 'descripcion' => 'Acceso a la página principal del dashboard'],
             ['nombre' => 'acceso.gestion-hospital', 'descripcion' => 'Acceso a la página de gestión del hospital'],
             ['nombre' => 'acceso.pacientes', 'descripcion' => 'Acceso a la página de gestión de pacientes'],
+            ['nombre' => 'acceso.admision', 'descripcion' => 'Acceso al módulo de admisión e internación'],
+            ['nombre' => 'acceso.medicamentos', 'descripcion' => 'Acceso a la gestión de medicamentos y categorías'], // <-- AÑADE ESTA LÍNEA
             ['nombre' => 'acceso.usuarios-y-roles', 'descripcion' => 'Acceso a la página de gestión de usuarios y roles'],
             ['nombre' => 'acceso.hospital', 'descripcion' => 'Acceso a la página de hospital'],
         ];
@@ -121,5 +123,9 @@ class DatabaseSeeder extends Seeder
                 'hospital_id' => $hospital->id,
             ]
         );
+        $this->call([
+            MedicamentoSeeder::class,
+            // Aquí puedes añadir otros seeders si los tienes
+        ]);
     }
 }

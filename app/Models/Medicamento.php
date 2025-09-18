@@ -17,8 +17,12 @@ class Medicamento extends Model
         'descripcion',
         'presentacion',
         'via_administracion',
+        'categoria_id'
     ];
-
+    public function categoria()
+    {
+        return $this->belongsTo(MedicamentoCategoria::class, 'categoria_id');
+    }
     protected static function booted()
     {
         static::created(fn($m) => Log::info('Medicamento creado', $m->toArray()));

@@ -71,20 +71,22 @@ class CamaController extends Controller
         ], 200);
     }
     public function getDisponibles(Request $request)
-{
-    $query = Cama::query();
+    {
+        $request->validate([
+            // La validación ahora es sobre el ID de la sala
+            'sala_id' => 'nullable|integer|exists:salas,id'
+        ]);
 
-    // Criterio: Solo camas activas y disponibles.
-    $query->where('estado', 1)->where('disponibilidad', 1);
+        $query = Cama::query();
+        $query->where('estado', 1)->where('disponibilidad', 1);
 
-    // Permite filtrar por especialidad si el frontend envía el ID.
-    if ($request->has('especialidad_id')) {
-        $query->whereHas('sala', function ($q) use ($request) {
-            $q->where('especialidad_id', $request->especialidad_id);
-        });
+        // --- CORRECCIÓN CLAVE ---
+        // Si la petición incluye una sala_id, filtramos las camas por esa sala.
+        if ($request->has('sala_id')) {
+            $query->where('sala_id', $request->sala_id);
+        }
+
+        // Ya no necesitamos cargar la especialidad aquí, es más simple
+        return $query->with('sala')->get();
     }
-
-    return $query->with('sala.especialidad')->get();
-}
-
 }

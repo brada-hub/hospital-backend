@@ -19,13 +19,23 @@ class Tratamiento extends Model
         'fecha_fin',
         'observaciones',
         'internacion_id',
+        'user_id',
+
     ];
 
     public function internacion()
     {
         return $this->belongsTo(Internacion::class);
     }
+    public function recetas()
+    {
+        return $this->hasMany(Receta::class);
+    }
 
+    public function medico()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
     protected static function booted()
     {
         static::created(fn($t) => Log::info('Tratamiento creado', $t->toArray()));

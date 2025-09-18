@@ -10,7 +10,8 @@ class MedicamentoController extends Controller
 {
     public function index()
     {
-        return Medicamento::all();
+        // MEJORA: Usamos with('categoria') para cargar la relación y ser más eficientes.
+        return Medicamento::with('categoria')->orderBy('nombre')->get();
     }
 
     public function store(Request $request)
@@ -20,17 +21,20 @@ class MedicamentoController extends Controller
             'descripcion'        => 'required|string|max:255',
             'presentacion'       => 'required|string|max:100',
             'via_administracion' => 'required|string|max:100',
+            // MEJORA: Se añade la validación para que la categoría exista.
+            'categoria_id'       => 'nullable|exists:medicamento_categorias,id',
         ]);
 
         $medicamento = Medicamento::create($data);
         Log::info('Medicamento registrado', ['id' => $medicamento->id]);
 
-        return response()->json($medicamento, 201);
+        return response()->json($medicamento->load('categoria'), 201);
     }
 
     public function show($id)
     {
-        return Medicamento::findOrFail($id);
+        // MEJORA: Usamos with('categoria') también aquí.
+        return Medicamento::with('categoria')->findOrFail($id);
     }
 
     public function update(Request $request, $id)
@@ -42,12 +46,14 @@ class MedicamentoController extends Controller
             'descripcion'        => 'required|string|max:255',
             'presentacion'       => 'required|string|max:100',
             'via_administracion' => 'required|string|max:100',
+            // MEJORA: Se añade la validación para que la categoría exista.
+            'categoria_id'       => 'nullable|exists:medicamento_categorias,id',
         ]);
 
         $medicamento->update($data);
-        Log::info('Medicamento actualizado manualmente', ['id' => $medicamento->id]);
+        Log::info('Medicamento actualizado', ['id' => $medicamento->id]);
 
-        return response()->json($medicamento, 200);
+        return response()->json($medicamento->load('categoria'), 200);
     }
 
     public function destroy($id)

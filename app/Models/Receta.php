@@ -30,7 +30,10 @@ class Receta extends Model
     {
         return $this->belongsTo(Medicamento::class);
     }
-
+    public function administras()
+    {
+        return $this->hasMany(Administra::class);
+    }
     protected static function booted()
     {
         static::created(fn($r) => Log::info('Receta creada', $r->toArray()));

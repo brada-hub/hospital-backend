@@ -10,29 +10,30 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
+
 class UserController extends Controller
 {
     public function index()
     {
         // Lista paginada de usuarios con su rol
-       // 📌 CORRECCIÓN: Se carga la relación 'permissions'
+        // 📌 CORRECCIÓN: Se carga la relación 'permissions'
         $users = User::with('rol.permissions', 'permissions')->paginate(10);
         return response()->json($users, 200);
     }
     public function me(Request $request)
-{
-    $user = $request->user(); // usuario autenticado vía Sanctum
+    {
+        $user = $request->user(); // usuario autenticado vía Sanctum
 
-    // Cargar relaciones necesarias
-    $user->load('rol.permissions', 'permissions', 'hospital');
+        // Cargar relaciones necesarias
+        $user->load('rol.permissions', 'permissions', 'hospital');
 
-    return response()->json([
-        'user' => $user
-    ], 200);
-}
+        return response()->json([
+            'user' => $user
+        ], 200);
+    }
 
     // Nuevo método para sincronizar permisos individuales
-     public function syncPermissions(Request $request, User $user)
+    public function syncPermissions(Request $request, User $user)
     {
         $request->validate([
             'permissions' => 'array',
@@ -51,32 +52,32 @@ class UserController extends Controller
         return response()->json($user->load('permissions'), 200);
     }
 
-  public function store(Request $request)
-{
-    $data = $request->validate([
-        'nombre'    => 'required|string|max:50',
-        'apellidos' => 'required|string|max:100',
-        'telefono'  => 'nullable|numeric',
-        'email'     => 'required|string|email|max:100|unique:users',
-        'password'  => 'required|string|min:8',
-        'rol_id'    => 'required|exists:rols,id',
-        'hospital_id' => 'required|exists:hospitals,id',
-    ]);
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'nombre'    => 'required|string|max:50',
+            'apellidos' => 'required|string|max:100',
+            'telefono'  => 'nullable|numeric',
+            'email'     => 'required|string|email|max:100|unique:users',
+            'password'  => 'required|string|min:8',
+            'rol_id'    => 'required|exists:rols,id',
+            'hospital_id' => 'required|exists:hospitals,id',
+        ]);
 
-    $data['password'] = Hash::make($data['password']);
+        $data['password'] = Hash::make($data['password']);
 
-    $user = User::create($data);
+        $user = User::create($data);
 
-    // 🚀 Asignar automáticamente los permisos del rol
-    if ($user->rol) {
-        $permIds = $user->rol->permissions->pluck('id')->toArray();
-        $user->permissions()->syncWithPivotValues($permIds, ['estado' => 'permitido']);
+        // 🚀 Asignar automáticamente los permisos del rol
+        if ($user->rol) {
+            $permIds = $user->rol->permissions->pluck('id')->toArray();
+            $user->permissions()->syncWithPivotValues($permIds, ['estado' => 'permitido']);
+        }
+
+        Log::info("Usuario creado con permisos del rol", ['user' => $user]);
+
+        return response()->json($user->load('rol.permissions', 'permissions'), 201);
     }
-
-    Log::info("Usuario creado con permisos del rol", ['user' => $user]);
-
-    return response()->json($user->load('rol.permissions', 'permissions'), 201);
-}
 
 
     public function show($id)
@@ -86,44 +87,48 @@ class UserController extends Controller
         return response()->json($user, 200);
     }
     public function toggleEstado(Request $request, User $user)
-{
-    $data = $request->validate([
-        'estado' => 'required|in:0,1'
-    ]);
+    {
+        $data = $request->validate([
+            'estado' => 'required|in:0,1'
+        ]);
 
-    $user->estado = $data['estado'];
-    $user->save();
+        $user->estado = $data['estado'];
+        $user->save();
 
-    return response()->json($user, 200);
-}
-
-   public function update(Request $request, $id)
-{
-    $user = User::findOrFail($id);
-
-    $data = $request->validate([
-        'nombre'    => 'sometimes|required|string|max:50',
-        'apellidos' => 'sometimes|required|string|max:100',
-        'telefono'  => 'nullable|numeric',
-        'email'     => [
-            'sometimes','required','string','email','max:100',
-            Rule::unique('users','email')->ignore($user->id)
-        ],
-        'password'  => 'nullable|string|min:8',
-        'rol_id'    => 'sometimes|required|exists:rols,id',
-        'estado'    => 'sometimes|in:0,1',
-    ]);
-
-    if (!empty($data['password'])) {
-        $data['password'] = Hash::make($data['password']);
-    } else {
-        unset($data['password']); // evita sobreescribir con null
+        return response()->json($user, 200);
     }
 
-    $user->update($data);
+    public function update(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
 
-    return response()->json($user, 200);
-}
+        $data = $request->validate([
+            'nombre'    => 'sometimes|required|string|max:50',
+            'apellidos' => 'sometimes|required|string|max:100',
+            'telefono'  => 'nullable|numeric',
+            'email'     => [
+                'sometimes',
+                'required',
+                'string',
+                'email',
+                'max:100',
+                Rule::unique('users', 'email')->ignore($user->id)
+            ],
+            'password'  => 'nullable|string|min:8',
+            'rol_id'    => 'sometimes|required|exists:rols,id',
+            'estado'    => 'sometimes|in:0,1',
+        ]);
+
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']); // evita sobreescribir con null
+        }
+
+        $user->update($data);
+
+        return response()->json($user, 200);
+    }
     public function destroy($id)
     {
         $user = User::findOrFail($id);
@@ -132,59 +137,57 @@ class UserController extends Controller
         Log::warning("Usuario eliminado", ['id' => $id]);
         return response()->noContent(); // 204
     }
-  public function login(Request $request)
-{
-    $request->validate([
-        'email'    => 'required|email',
-        'password' => 'required|string',
-    ]);
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required|string',
+        ]);
 
-    $key = 'login-attempts:' . $request->ip();
+        $key = 'login-attempts:' . $request->ip();
 
-    if (RateLimiter::tooManyAttempts($key, 5)) {
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return response()->json([
+                'message' => 'Demasiados intentos fallidos. Intenta de nuevo en ' . RateLimiter::availableIn($key) . ' segundos.'
+            ], 429);
+        }
+
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            RateLimiter::hit($key, 60);
+            return response()->json(['message' => 'Credenciales incorrectas'], 401);
+        }
+
+        RateLimiter::clear($key);
+
+        $user = User::find(Auth::id());
+
+        // 🚨 Validación extra: usuario desactivado
+        if ($user->estado == 0) {
+            Auth::logout();
+            return response()->json([
+                'message' => 'Tu cuenta está desactivada. Contacta al administrador.'
+            ], 403);
+        }
+
+        // 📌 Cargamos las relaciones
+        $user->load('rol.permissions', 'permissions', 'hospital');
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
         return response()->json([
-            'message' => 'Demasiados intentos fallidos. Intenta de nuevo en ' . RateLimiter::availableIn($key) . ' segundos.'
-        ], 429);
+            'access_token' => $token,
+            'token_type'   => 'Bearer',
+            'user'         => $user
+        ]);
     }
 
-    if (!Auth::attempt($request->only('email', 'password'))) {
-        RateLimiter::hit($key, 60);
-        return response()->json(['message' => 'Credenciales incorrectas'], 401);
-    }
+    public function logout(Request $request)
+    {
+        // Revocar el token actual
+        $request->user()->currentAccessToken()->delete();
 
-    RateLimiter::clear($key);
-
-    $user = Auth::user();
-
-    // 🚨 Validación extra: usuario desactivado
-    if ($user->estado == 0) {
-        Auth::logout();
         return response()->json([
-            'message' => 'Tu cuenta está desactivada. Contacta al administrador.'
-        ], 403);
+            'message' => 'Sesión cerrada correctamente'
+        ], 200);
     }
-
-    // 📌 Cargamos las relaciones
-    $user->load('rol.permissions', 'permissions', 'hospital');
-
-    $token = $user->createToken('auth_token')->plainTextToken;
-
-    return response()->json([
-        'access_token' => $token,
-        'token_type'   => 'Bearer',
-        'user'         => $user
-    ]);
-}
-
-public function logout(Request $request)
-{
-    // Revocar el token actual
-    $request->user()->currentAccessToken()->delete();
-
-    return response()->json([
-        'message' => 'Sesión cerrada correctamente'
-    ], 200);
-}
-
-
 }
