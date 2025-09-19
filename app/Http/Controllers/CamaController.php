@@ -1,34 +1,47 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\controllers;
 
 use App\Models\Cama;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class CamaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Cama::with('sala')->get();
+        $hospitalId = $request->user()->hospital_id;
+        return Cama::with('sala.especialidad')
+            ->whereHas('sala.especialidad', function ($query) use ($hospitalId) {
+                $query->where('hospital_id', $hospitalId);
+            })
+            ->orderBy('nombre')
+            ->get();
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre'         => 'required|string|max:100|unique:camas,nombre',
-            'tipo'           => 'required|string|max:50',
-            // CAMBIADO: Validación para un booleano (0 o 1).
-            'estado'         => 'required|boolean',
-            // AÑADIDO: Validación para 'disponibilidad', solo acepta 0, 1 o 2.
+            'nombre'         => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('camas')->where('sala_id', $request->sala_id),
+                'regex:/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s-]+$/'
+            ],
+            'tipo'           => [
+                'required',
+                'string',
+                Rule::in(['ESTÁNDAR', 'PEDIÁTRICA', 'CUNA', 'INCUBADORA', 'CAMA UCI', 'CAMA QUIRÚRGICA'])
+            ],
             'disponibilidad' => 'required|integer|in:0,1,2',
             'sala_id'        => 'required|exists:salas,id',
         ]);
 
+        $data['estado'] = true;
         $cama = Cama::create($data);
-        Log::info('Cama registrada', ['id' => $cama->id]);
-
-        return response()->json($cama, 201);
+        return response()->json($cama->load('sala'), 201);
     }
 
     public function show($id)
@@ -39,54 +52,48 @@ class CamaController extends Controller
     public function update(Request $request, $id)
     {
         $cama = Cama::findOrFail($id);
-
         $data = $request->validate([
-            'nombre'         => 'required|string|max:100|unique:camas,nombre,' . $cama->id,
-            'tipo'           => 'required|string|max:50',
-            // CAMBIADO: Validación para un booleano.
-            'estado'         => 'required|boolean',
-            // AÑADIDO: Validación para 'disponibilidad'.
+            'nombre'         => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('camas')->where('sala_id', $request->sala_id)->ignore($cama->id),
+                'regex:/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s-]+$/'
+            ],
+            'tipo'           => [
+                'required',
+                'string',
+                Rule::in(['ESTÁNDAR', 'PEDIÁTRICA', 'CUNA', 'INCUBADORA', 'CAMA UCI', 'CAMA QUIRÚRGICA'])
+            ],
             'disponibilidad' => 'required|integer|in:0,1,2',
             'sala_id'        => 'required|exists:salas,id',
+            // 'estado' => 'required|boolean', // <-- SE QUITA DE AQUÍ
         ]);
 
         $cama->update($data);
-        Log::info('Cama actualizada', ['id' => $cama->id]);
-
-        return response()->json($cama, 200);
+        return response()->json($cama->load('sala'), 200);
     }
 
     public function destroy($id)
     {
         $cama = Cama::findOrFail($id);
-
-        // CAMBIADO: En lugar de borrar, ahora alterna el estado (activo/inactivo).
-        $cama->update(['estado' => !$cama->estado]);
-
-        Log::warning('Estado de la cama actualizado', ['id' => $id]);
-
-        return response()->json([
-            'message' => 'Estado de la cama actualizado',
-            'cama' => $cama
-        ], 200);
+        if ($cama->disponibilidad === 0) {
+            return response()->json([
+                'message' => 'No se puede eliminar. La cama está actualmente ocupada.'
+            ], 409);
+        }
+        $cama->update(['estado' => false]);
+        return response()->json(['message' => 'Cama eliminada correctamente'], 200);
     }
+
     public function getDisponibles(Request $request)
     {
-        $request->validate([
-            // La validación ahora es sobre el ID de la sala
-            'sala_id' => 'nullable|integer|exists:salas,id'
-        ]);
-
+        $request->validate(['sala_id' => 'nullable|integer|exists:salas,id']);
         $query = Cama::query();
         $query->where('estado', 1)->where('disponibilidad', 1);
-
-        // --- CORRECCIÓN CLAVE ---
-        // Si la petición incluye una sala_id, filtramos las camas por esa sala.
-        if ($request->has('sala_id')) {
+        if ($request->filled('sala_id')) {
             $query->where('sala_id', $request->sala_id);
         }
-
-        // Ya no necesitamos cargar la especialidad aquí, es más simple
         return $query->with('sala')->get();
     }
 }

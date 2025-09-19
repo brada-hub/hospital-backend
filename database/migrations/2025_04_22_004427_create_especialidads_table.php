@@ -13,11 +13,17 @@ return new class extends Migration
     {
         Schema::create('especialidads', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
-            $table->string('descripcion')->nullable();
+            // CAMBIADO: Límite de caracteres añadido
+            $table->string('nombre', 100);
+            // CAMBIADO: Límite de caracteres añadido
+            $table->string('descripcion', 255)->nullable();
             $table->boolean('estado')->default(1);
             $table->foreignId('hospital_id')->constrained('hospitals')->onDelete('cascade');
             $table->timestamps();
+
+            // AÑADIDO: Índice único compuesto.
+            // Esto asegura que no se pueda repetir un 'nombre' para el mismo 'hospital_id'.
+            $table->unique(['nombre', 'hospital_id']);
         });
     }
 

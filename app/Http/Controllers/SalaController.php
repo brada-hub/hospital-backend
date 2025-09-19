@@ -5,33 +5,40 @@ namespace App\Http\Controllers;
 use App\Models\Sala;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Validation\Rule;
 
 class SalaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // ESTA ES LA VERSIÓN A PRUEBA DE BALAS
-        // Se asegura de traer las salas con su especialidad y filtra solo las activas.
+        $hospitalId = $request->user()->hospital_id;
         return Sala::with('especialidad')
-            ->where('estado', 1) // Filtra explícitamente solo las salas activas
+            ->whereHas('especialidad', fn($query) => $query->where('hospital_id', $hospitalId))
+            ->orderBy('nombre')
             ->get();
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre'          => 'required|string|max:100|unique:salas,nombre',
-            'tipo'            => 'required|string|max:50',
-            // CAMBIADO: La validación ahora es para un booleano (acepta 1, 0, true, false).
-            'estado'          => 'required|boolean',
+            'nombre'          => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('salas')->where('especialidad_id', $request->especialidad_id),
+                'regex:/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s-]+$/'
+            ],
+            'tipo'            => [
+                'required',
+                'string',
+                Rule::in(['SALA COMÚN', 'QUIRÓFANO', 'CONSULTORIO', 'TERAPIA INTENSIVA (UTI)', 'LABORATORIO', 'SALA DE ESPERA'])
+            ],
             'especialidad_id' => 'required|exists:especialidads,id',
         ]);
 
+        $data['estado'] = true;
         $sala = Sala::create($data);
-        Log::info('Sala registrada', ['id' => $sala->id]);
-
-        return response()->json($sala, 201);
+        return response()->json($sala->load('especialidad'), 201);
     }
 
     public function show($id)
@@ -42,29 +49,36 @@ class SalaController extends Controller
     public function update(Request $request, $id)
     {
         $sala = Sala::findOrFail($id);
-
         $data = $request->validate([
-            'nombre'          => 'required|string|max:100|unique:salas,nombre,' . $sala->id,
-            'tipo'            => 'required|string|max:50',
-            // CAMBIADO: La validación ahora es para un booleano.
-            'estado'          => 'required|boolean',
+            'nombre'          => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('salas')->where('especialidad_id', $request->especialidad_id)->ignore($sala->id),
+                'regex:/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s-]+$/'
+            ],
+            'tipo'            => [
+                'required',
+                'string',
+                Rule::in(['SALA COMÚN', 'QUIRÓFANO', 'CONSULTORIO', 'TERAPIA INTENSIVA (UTI)', 'LABORATORIO', 'SALA DE ESPERA'])
+            ],
+            // 'estado' => 'required|boolean', // <-- SE QUITA DE AQUÍ
             'especialidad_id' => 'required|exists:especialidads,id',
         ]);
 
         $sala->update($data);
-        Log::info('Sala actualizada', ['id' => $sala->id]);
-
-        return response()->json($sala, 200);
+        return response()->json($sala->load('especialidad'), 200);
     }
 
     public function destroy(Sala $sala)
     {
-        // CAMBIADO: La lógica para alternar el estado es ahora súper simple.
-        $sala->update(['estado' => !$sala->estado]);
+        if ($sala->camas()->where('estado', 1)->exists()) {
+            return response()->json([
+                'message' => 'No se puede eliminar. La sala tiene camas activas asignadas.'
+            ], 409);
+        }
 
-        return response()->json([
-            'message' => 'Estado de la sala actualizado',
-            'sala'    => $sala
-        ], 200);
+        $sala->update(['estado' => false]);
+        return response()->json(['message' => 'Sala eliminada correctamente'], 200);
     }
 }

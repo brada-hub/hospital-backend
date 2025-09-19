@@ -5,20 +5,30 @@ namespace App\Http\Controllers;
 use App\Models\Especialidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule; // <-- Asegúrate de importar esto
 
 class EspecialidadController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Especialidad::with('hospital')->get();
+        // MEJORADO: Devuelve solo las especialidades del hospital del usuario.
+        $hospitalId = $request->user()->hospital_id;
+        return Especialidad::where('hospital_id', $hospitalId)->orderBy('nombre')->get();
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre'      => 'required|string|max:100|unique:especialidads,nombre',
+            // REGLAS MEJORADAS
+            'nombre'      => [
+                'required',
+                'string',
+                'max:100',
+                // El nombre debe ser único, pero solo dentro del mismo hospital.
+                Rule::unique('especialidads')->where('hospital_id', $request->hospital_id),
+                'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$/'
+            ],
             'descripcion' => 'nullable|string|max:255',
-            // CAMBIADO: La validación ahora es para un booleano (acepta 1, 0, true, false).
             'estado'      => 'required|boolean',
             'hospital_id' => 'required|exists:hospitals,id',
         ]);
@@ -39,9 +49,16 @@ class EspecialidadController extends Controller
         $especialidad = Especialidad::findOrFail($id);
 
         $data = $request->validate([
-            'nombre'      => 'required|string|max:100|unique:especialidads,nombre,' . $especialidad->id,
+            // REGLAS MEJORADAS
+            'nombre'      => [
+                'required',
+                'string',
+                'max:100',
+                // Al actualizar, ignora el registro actual en la validación unique.
+                Rule::unique('especialidads')->where('hospital_id', $especialidad->hospital_id)->ignore($especialidad->id),
+                'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s-]+$/'
+            ],
             'descripcion' => 'nullable|string|max:255',
-            // CAMBIADO: La validación ahora es para un booleano.
             'estado'      => 'required|boolean',
             'hospital_id' => 'required|exists:hospitals,id',
         ]);
@@ -56,14 +73,18 @@ class EspecialidadController extends Controller
     {
         $especialidad = Especialidad::findOrFail($id);
 
-        // CAMBIADO: En lugar de borrar, ahora alterna el estado (activo/inactivo).
-        $especialidad->update(['estado' => !$especialidad->estado]);
+        // AÑADIDO: Verificamos si tiene salas activas antes de desactivar.
+        if ($especialidad->salas()->where('estado', 1)->exists()) {
+            return response()->json([
+                'message' => 'No se puede eliminar. La especialidad tiene salas activas asignadas.'
+            ], 409); // 409 Conflict
+        }
 
-        Log::warning('Estado de la especialidad actualizado', ['id' => $id]);
+        $especialidad->update(['estado' => false]);
+        Log::warning('Especialidad desactivada (soft delete)', ['id' => $id]);
 
         return response()->json([
-            'message' => 'Estado de la especialidad actualizado',
-            'especialidad' => $especialidad,
+            'message' => 'Especialidad eliminada correctamente',
         ], 200);
     }
 }

@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('hospitals', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
-            $table->string('departamento');
-            $table->string('direccion');
-            $table->string('nivel');
-            $table->string('tipo');
-            $table->integer('telefono');
+            $table->string('nombre', 100)->unique(); // Nombre único y con límite
+            $table->string('departamento', 50);
+            $table->string('direccion', 255);
+            $table->string('nivel', 50);
+            $table->string('tipo', 50);
+            $table->string('telefono', 15)->unique();  // String es mejor para teléfonos
             $table->timestamps();
         });
     }

@@ -54,6 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Rutas de usuario y roles
+    Route::put('/user/profile', [UserController::class, 'updateProfile']);
+    Route::put('/user/password', [UserController::class, 'updatePassword']);
     Route::patch('/users/{user}/estado', [UserController::class, 'toggleEstado']);
     Route::get('/me', [UserController::class, 'me']);
     Route::post('/logout', [UserController::class, 'logout']);

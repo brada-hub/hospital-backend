@@ -6,24 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('salas', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
-            $table->string('tipo');
+            // CAMBIADO: Límite de caracteres
+            $table->string('nombre', 100);
+            // CAMBIADO: Límite de caracteres
+            $table->string('tipo', 50);
             $table->boolean('estado')->default(1);
             $table->foreignId('especialidad_id')->constrained('especialidads')->onDelete('cascade');
             $table->timestamps();
+
+            // AÑADIDO: Índice único compuesto.
+            // Una sala debe tener un nombre único DENTRO de una misma especialidad.
+            $table->unique(['nombre', 'especialidad_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('salas');

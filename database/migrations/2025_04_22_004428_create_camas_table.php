@@ -10,19 +10,19 @@ return new class extends Migration
     {
         Schema::create('camas', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
-            $table->string('tipo');
-
-            // CAMBIADO: 'estado' ahora es booleano (0 o 1) para activo/inactivo.
+            // CAMBIADO: Límite de caracteres
+            $table->string('nombre', 100);
+            // CAMBIADO: Límite de caracteres
+            $table->string('tipo', 50);
             $table->boolean('estado')->default(1);
-
-            // AÑADIDO: 'disponibilidad' para manejar múltiples estados.
-            // Usaremos un entero pequeño sin signo. Por defecto, una cama estará disponible.
             // 0: Ocupada, 1: Disponible, 2: Mantenimiento
             $table->tinyInteger('disponibilidad')->unsigned()->default(1);
-
             $table->foreignId('sala_id')->constrained('salas')->onDelete('cascade');
             $table->timestamps();
+
+            // AÑADIDO: Índice único compuesto.
+            // Una cama debe tener un nombre único DENTRO de una misma sala.
+            $table->unique(['nombre', 'sala_id']);
         });
     }
 

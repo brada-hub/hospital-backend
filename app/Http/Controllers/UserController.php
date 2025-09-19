@@ -180,7 +180,48 @@ class UserController extends Controller
             'user'         => $user
         ]);
     }
+    // Agrégalo dentro de la clase UserController
 
+    public function updateProfile(Request $request)
+    {
+        // Obtenemos el usuario que está haciendo la petición (el autenticado)
+        $user = $request->user();
+
+        $data = $request->validate([
+            'nombre'    => 'required|string|max:50',
+            'apellidos' => 'required|string|max:100',
+            'telefono'  => 'nullable|numeric',
+            // No permitimos cambiar el email desde aquí para mantenerlo simple y seguro
+        ]);
+
+        $user->update($data);
+        $user->load('rol.permissions', 'permissions', 'hospital');
+        // Devolvemos el usuario actualizado para que el frontend refresque los datos
+        return response()->json($user, 200);
+    }
+    public function updatePassword(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'current_password' => 'required|string',
+            'password'         => 'required|string|min:8|confirmed', // password_confirmation debe coincidir
+        ]);
+
+        // Verificamos que la contraseña actual sea correcta
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'La contraseña actual es incorrecta.'], 422);
+        }
+
+        // Actualizamos con la nueva contraseña
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // Opcional pero recomendado: Desloguear de otras sesiones
+        // Auth::logoutOtherDevices($request->password);
+
+        return response()->json(['message' => 'Contraseña actualizada correctamente.']);
+    }
     public function logout(Request $request)
     {
         // Revocar el token actual

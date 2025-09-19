@@ -6,31 +6,38 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Cama extends Model
 {
     use HasFactory;
 
     protected $table = 'camas';
+    protected $fillable = ['nombre', 'tipo', 'estado', 'disponibilidad', 'sala_id'];
+    protected $casts = ['estado' => 'boolean', 'disponibilidad' => 'integer'];
 
-    // AÑADIDO: 'disponibilidad' a la lista de campos asignables.
-    protected $fillable = [
-        'nombre',
-        'tipo',
-        'estado',
-        'disponibilidad',
-        'sala_id',
-    ];
+    protected function nombre(): Attribute
+    {
+        return Attribute::make(
+            // CORREGIDO: Usamos funciones multibyte para manejar acentos
+            get: fn($value) => mb_convert_case(mb_strtolower($value, 'UTF-8'), MB_CASE_TITLE, 'UTF-8'),
 
-    /**
-     * AÑADIDO: Conversión de tipos para los nuevos campos.
-     * 'estado' se manejará como true/false.
-     * 'disponibilidad' se asegurará de ser siempre un número entero.
-     */
-    protected $casts = [
-        'estado' => 'boolean',
-        'disponibilidad' => 'integer',
-    ];
+            // El 'set' ya funciona bien con acentos, no necesita cambios
+            set: fn($value) => strtoupper($value),
+        );
+    }
+
+    protected function tipo(): Attribute
+    {
+        return Attribute::make(
+            // CORREGIDO: Usamos funciones multibyte para manejar acentos
+            get: fn($value) => mb_convert_case(mb_strtolower($value, 'UTF-8'), MB_CASE_TITLE, 'UTF-8'),
+
+            set: fn($value) => strtoupper($value),
+        );
+    }
+
+    // --- TUS MÉTODOS Y RELACIONES ORIGINALES (INTACTOS) ---
 
     public function sala()
     {

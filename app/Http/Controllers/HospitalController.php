@@ -6,93 +6,101 @@ use App\Models\Hospital;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class HospitalController extends Controller
 {
+    /**
+     * Display the authenticated user's hospital.
+     */
     public function index()
     {
-      return Auth::user()->hospital;
+        return Auth::user()->hospital;
     }
 
+    /**
+     * Store a newly created hospital in storage and assign it to the user.
+     */
     public function store(Request $request)
     {
-        $user = Auth::user(); // Obtener el usuario autenticado
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-        // Validación de datos de hospital
+        // VALIDACIÓN CORREGIDA: AHORA ESPERA MAYÚSCULAS
         $data = $request->validate([
-            'nombre'       => 'required|string|max:100|unique:hospitals,nombre',
-            'departamento' => 'required|string|max:100',
-            'direccion'    => 'required|string|max:255',
-            'nivel'        => 'required|string|max:50',
-            'tipo'         => 'required|string|max:50',
-            'telefono'     => 'required|digits_between:7,15',
+            'nombre'       => 'required|string|max:100|unique:hospitals,nombre|regex:/^[a-zA-Z\s]+$/',
+            'departamento' => ['required', 'string', Rule::in(['LA PAZ', 'COCHABAMBA', 'SANTA CRUZ'])],
+            'direccion'    => 'required|string|max:255|regex:/^[a-zA-Z0-9\s#.,-]+$/',
+            'nivel'        => ['required', 'string', Rule::in(['NIVEL 1', 'NIVEL 2', 'NIVEL 3'])],
+            'tipo'         => ['required', 'string', Rule::in(['PÚBLICO', 'PRIVADO'])],
+            'telefono'     => 'required|numeric|digits:8|min:60000000|max:79999999|unique:hospitals,telefono',
         ]);
 
-        // Crear el nuevo hospital
         $hospital = Hospital::create($data);
-
-        // Asociar este hospital al usuario autenticado
         $user->hospital_id = $hospital->id;
-        $user->save(); // Guardar el hospital asignado al usuario
+        $user->save();
 
-        // Loguear la acción
         Log::info('Hospital registrado para el usuario', ['user_id' => $user->id, 'hospital_id' => $hospital->id]);
-
-        return response()->json($hospital, 201); // Retorna el hospital recién creado
+        return response()->json($hospital, 201);
     }
 
+    /**
+     * Display the specified hospital.
+     */
     public function show($id)
     {
-        // Retorna el hospital con el ID proporcionado
         return Hospital::findOrFail($id);
     }
 
+    /**
+     * Update the specified hospital in storage.
+     */
     public function update(Request $request, $id)
     {
-        // Verificar que el hospital existe
         $hospital = Hospital::findOrFail($id);
 
-        // Validación de datos
+        // VALIDACIÓN CORREGIDA: AHORA ESPERA MAYÚSCULAS
         $data = $request->validate([
-            'nombre'       => 'required|string|max:100|unique:hospitals,nombre,' . $hospital->id,
-            'departamento' => 'required|string|max:100',
-            'direccion'    => 'required|string|max:255',
-            'nivel'        => 'required|string|max:50',
-            'tipo'         => 'required|string|max:50',
-            'telefono'     => 'required|digits_between:7,15',
+            'nombre'       => ['required', 'string', 'max:100', Rule::unique('hospitals')->ignore($hospital->id), 'regex:/^[a-zA-Z\s]+$/'],
+            'departamento' => ['required', 'string', Rule::in(['LA PAZ', 'COCHABAMBA', 'SANTA CRUZ'])],
+            'direccion'    => 'required|string|max:255|regex:/^[a-zA-Z0-9\s#.,-]+$/',
+            'nivel'        => ['required', 'string', Rule::in(['NIVEL 1', 'NIVEL 2', 'NIVEL 3'])],
+            'tipo'         => ['required', 'string', Rule::in(['PÚBLICO', 'PRIVADO'])],
+            'telefono'     => [
+                'required',
+                'numeric',
+                'digits:8',
+                'min:60000000',
+                'max:79999999',
+                Rule::unique('hospitals')->ignore($hospital->id),
+            ],
         ]);
 
-        // Actualizar los datos del hospital
         $hospital->update($data);
-
-        // Loguear la actualización
-        Log::info('Hospital actualizado manualmente', ['id' => $hospital->id]);
-
-        return response()->json($hospital, 200); // Retorna el hospital actualizado
+        Log::info('Hospital actualizado', ['id' => $hospital->id]);
+        return response()->json($hospital, 200);
     }
 
+    /**
+     * Remove the specified hospital from storage.
+     */
     public function destroy($id)
     {
-        // Eliminar el hospital con el ID proporcionado
         $hospital = Hospital::findOrFail($id);
         $hospital->delete();
-
-        // Loguear la eliminación
         Log::warning('Hospital eliminado', ['id' => $id]);
-
-        return response()->noContent(); // Retorna 204 si se eliminó correctamente
+        return response()->noContent();
     }
-     public function getHospitalDetails($id)
-    {
-        // Obtener el hospital con el id proporcionado
-        $hospital = Hospital::find($id);
 
-        // Si el hospital no existe
+    /**
+     * Get details for a specific hospital by ID.
+     */
+    public function getHospitalDetails($id)
+    {
+        $hospital = Hospital::find($id);
         if (!$hospital) {
             return response()->json(['message' => 'Hospital no encontrado'], 404);
         }
-
-        // Retornar los detalles del hospital
         return response()->json($hospital);
     }
 }
