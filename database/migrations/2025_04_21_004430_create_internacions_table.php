@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('internacions', function (Blueprint $table) {
@@ -18,14 +15,20 @@ return new class extends Migration
             $table->string('motivo');
             $table->string('diagnostico');
             $table->string('observaciones')->nullable();
-            $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
+
+            $table->foreignId('paciente_id')
+                ->constrained('pacientes')
+                ->onDelete('cascade');
+
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->onDelete('cascade')
+                ->comment('Médico que internó al paciente');
+
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('internacions');

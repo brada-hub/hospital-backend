@@ -12,11 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('rols', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre');
-            $table->string('descripcion')->nullable();
-            $table->timestamps();
-    
+            $table->id(); // Columna de ID auto-incremental (bigint, unsigned)
+
+            // Basado en tus validaciones: 'required|string|max:50|unique'
+            $table->string('nombre', 50)->unique();
+
+            // Basado en tus validaciones: 'nullable|string|max:255'
+            $table->string('descripcion', 255)->nullable();
+
+            // El nuevo campo 'estado' con valor por defecto '1' (activo)
+            $table->boolean('estado')->default(true);
+
+            $table->timestamps(); // Columnas created_at y updated_at
         });
     }
 

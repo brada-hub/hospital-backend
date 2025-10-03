@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('genero');
             $table->integer('telefono');
             $table->string('direccion');
-          // CAMBIADO: Se usa boolean() en lugar de string().
+            // CAMBIADO: Se usa boolean() en lugar de string().
             // Por defecto, todos los pacientes nuevos serán 'activos' (1).
             $table->boolean('estado')->default(1);
             $table->timestamps();

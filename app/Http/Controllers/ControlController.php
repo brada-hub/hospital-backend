@@ -4,56 +4,108 @@ namespace App\Http\Controllers;
 
 use App\Models\Control;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class ControlController extends Controller
 {
-    public function index()
+
+    /**
+     * Guarda una nueva nota de evolución.
+     */
+    public function index(Request $request)
     {
-        return Control::with('internacion')->get();
+        $request->validate(['internacion_id' => 'sometimes|integer|exists:internacions,id']);
+        $query = Control::with('user:id,nombre,apellidos');
+        if ($request->has('internacion_id')) {
+            $query->where('internacion_id', $request->internacion_id);
+        }
+        return $query->latest('fecha_control')->get();
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'internacion_id' => 'required|exists:internacions,id',
-            'fecha_control'  => 'required|date',
-            'observaciones'  => 'nullable|string|max:255',
-        ]);
+        // CASO 1: REGISTRO DE SIGNOS VITALES
+        if ($request->has('valores')) {
+            $data = $request->validate([
+                'internacion_id' => 'required|exists:internacions,id',
+                'observaciones'  => 'nullable|string',
+                'valores'        => 'required|array|min:1',
+                'valores.*.signo_id' => 'required|exists:signos,id',
+                'valores.*.medida'   => 'required|string|max:50',
+            ]);
 
-        $control = Control::create($data);
-        Log::info('Control registrado', ['id' => $control->id]);
+            try {
+                return DB::transaction(function () use ($data) {
+                    $control = Control::create([
+                        'internacion_id' => $data['internacion_id'],
+                        'user_id'        => Auth::id(),
+                        'fecha_control'  => Carbon::now(),
+                        'tipo'           => 'Control de Signos Vitales',
+                        'observaciones'  => $data['observaciones'] ?? null,
+                    ]);
 
-        return response()->json($control, 201);
+                    $control->valores()->createMany($data['valores']);
+                    Log::info('Control de signos vitales registrado', ['id' => $control->id]);
+                    return response()->json($control->load('valores.signo'), 201);
+                });
+            } catch (\Exception $e) {
+                Log::error('Error al registrar control', ['error' => $e->getMessage()]);
+                return response()->json(['message' => 'Error interno al registrar el control.'], 500);
+            }
+        }
+
+        // CASO 2: REGISTRO DE NOTA DE EVOLUCIÓN
+        else {
+            $data = $request->validate([
+                'internacion_id' => 'required|exists:internacions,id',
+                'observaciones'  => 'required|string',
+                'tipo'           => 'required|string|in:Evolución Médica,Nota de Enfermería,Interconsulta,Informe de Laboratorio',
+            ]);
+
+            $data['user_id'] = Auth::id();
+            $data['fecha_control'] = Carbon::now();
+            $control = Control::create($data);
+            Log::info('Nota de evolución registrada', ['id' => $control->id]);
+            return response()->json($control->load('user:id,nombre,apellidos'), 201);
+        }
     }
 
-    public function show($id)
+
+    /**
+     * Muestra una nota de evolución específica.
+     */
+    public function show(Control $control)
     {
-        return Control::with('internacion')->findOrFail($id);
+        return $control->load('user:id,nombre,apellidos');
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Actualiza una nota de evolución.
+     * (Generalmente las notas no se editan, pero se incluye por si acaso)
+     */
+    public function update(Request $request, Control $control)
     {
-        $control = Control::findOrFail($id);
-
         $data = $request->validate([
-            'internacion_id' => 'required|exists:internacions,id',
-            'fecha_control'  => 'required|date',
-            'observaciones'  => 'nullable|string|max:255',
+            'observaciones'  => 'sometimes|required|string',
+            'tipo'           => 'sometimes|required|string|in:Evolución Médica,Nota de Enfermería,Interconsulta,Informe de Laboratorio',
         ]);
 
         $control->update($data);
         Log::info('Control actualizado', ['id' => $control->id]);
 
-        return response()->json($control, 200);
+        return response()->json($control->load('user:id,nombre,apellidos'), 200);
     }
 
-    public function destroy($id)
+    /**
+     * Elimina una nota de evolución.
+     */
+    public function destroy(Control $control)
     {
-        $control = Control::findOrFail($id);
+        Log::warning('Control eliminado', ['id' => $control->id]);
         $control->delete();
-
-        Log::warning('Control eliminado', ['id' => $id]);
         return response()->noContent();
     }
 }

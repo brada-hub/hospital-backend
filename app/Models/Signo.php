@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Support\Facades\Log;
 
 class Signo extends Model
@@ -14,7 +15,8 @@ class Signo extends Model
 
     protected $fillable = [
         'nombre',
-        'unidad'
+        'unidad',
+        'es_rutinario',
     ];
 
     protected static function booted()

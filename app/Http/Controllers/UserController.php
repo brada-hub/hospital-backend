@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+
+use App\Models\Rol;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -31,7 +33,25 @@ class UserController extends Controller
             'user' => $user
         ], 200);
     }
+    public function getMedicosActivos()
+    {
+        // Buscamos el ID del rol 'MÉDICO'
+        $rolMedicoId = Rol::where('nombre', 'MÉDICO')->value('id');
 
+        if (!$rolMedicoId) {
+            return response()->json(['message' => 'Rol de Médico no encontrado.'], 404);
+        }
+
+        $medicos = User::where('rol_id', $rolMedicoId)
+            ->where('estado', 1) // Solo médicos activos
+            ->withCount(['internaciones as pacientes_activos_count' => function ($query) {
+                // Contamos solo las internaciones que no tienen fecha de alta
+                $query->whereNull('fecha_alta');
+            }])
+            ->get(['id', 'nombre', 'apellidos']);
+
+        return response()->json($medicos);
+    }
     // Nuevo método para sincronizar permisos individuales
     public function syncPermissions(Request $request, User $user)
     {

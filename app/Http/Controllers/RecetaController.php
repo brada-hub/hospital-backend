@@ -18,16 +18,16 @@ class RecetaController extends Controller
         $data = $request->validate([
             'tratamiento_id'    => 'required|exists:tratamientos,id',
             'medicamento_id'    => 'required|exists:medicamentos,id',
-            'frecuencia_medica' => 'required|string|max:100',
-            'concentracion'     => 'required|string|max:100',
-            'fecha_inicio'      => 'required|date',
-            'fecha_fin'         => 'required|date|after_or_equal:fecha_inicio',
+            'dosis'             => 'required|string|max:100',
+            'frecuencia_horas'  => 'required|integer|min:1',
+            'duracion_dias'     => 'required|integer|min:1',
+            'indicaciones'      => 'nullable|string',
         ]);
 
         $receta = Receta::create($data);
         Log::info('Receta registrada', ['id' => $receta->id]);
 
-        return response()->json($receta, 201);
+        return response()->json($receta->load('medicamento'), 201);
     }
 
     public function show($id)
@@ -40,12 +40,10 @@ class RecetaController extends Controller
         $receta = Receta::findOrFail($id);
 
         $data = $request->validate([
-            'tratamiento_id'    => 'required|exists:tratamientos,id',
-            'medicamento_id'    => 'required|exists:medicamentos,id',
-            'frecuencia_medica' => 'required|string|max:100',
-            'concentracion'     => 'required|string|max:100',
-            'fecha_inicio'      => 'required|date',
-            'fecha_fin'         => 'required|date|after_or_equal:fecha_inicio',
+            'dosis'             => 'sometimes|required|string|max:100',
+            'frecuencia_horas'  => 'sometimes|required|integer|min:1',
+            'duracion_dias'     => 'sometimes|required|integer|min:1',
+            'indicaciones'      => 'nullable|string',
         ]);
 
         $receta->update($data);

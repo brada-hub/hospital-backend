@@ -5,59 +5,35 @@ namespace App\Http\Controllers;
 use App\Models\CuidadoAplicado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class CuidadoAplicadoController extends Controller
 {
     public function index()
     {
-        return CuidadoAplicado::with(['usuario', 'cuidado'])->get();
+        // ✅ CORRECCIÓN 1: La relación en el modelo se llama 'user', no 'usuario'.
+        return CuidadoAplicado::with(['user', 'cuidado'])->get();
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'usuario_id'       => 'required|exists:usuarios,id',
-            'cuidado_id'       => 'required|exists:cuidados,id',
-            'fecha_aplicacion' => 'required|date',
-            'estado'           => 'required|string|max:50',
-            'observaciones'    => 'nullable|string|max:255',
+            'cuidado_id'    => 'required|exists:cuidados,id',
+            'observaciones' => 'nullable|string|max:255',
+            // ❌ CORRECCIÓN 2: Eliminamos la validación para 'estado'.
+            // La existencia del registro en la DB ya implica 'Realizado'.
         ]);
 
-        $registro = CuidadoAplicado::create($data);
-        Log::info('Cuidado aplicado registrado', ['id' => $registro->id]);
+        // El user_id es el ID de la enfermera logueada
+        $data['user_id'] = Auth::id();
+        // La fecha de aplicación es el momento actual
+        $data['fecha_aplicacion'] = Carbon::now();
 
-        return response()->json($registro, 201);
-    }
+        // ❌ NO pasamos 'estado' al create, ya que no existe en el modelo $fillable
+        // (y no existe en la tabla tras la última migración).
+        $cuidadoAplicado = CuidadoAplicado::create($data);
 
-    public function show($id)
-    {
-        return CuidadoAplicado::with(['usuario', 'cuidado'])->findOrFail($id);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $registro = CuidadoAplicado::findOrFail($id);
-
-        $data = $request->validate([
-            'usuario_id'       => 'required|exists:usuarios,id',
-            'cuidado_id'       => 'required|exists:cuidados,id',
-            'fecha_aplicacion' => 'required|date',
-            'estado'           => 'required|string|max:50',
-            'observaciones'    => 'nullable|string|max:255',
-        ]);
-
-        $registro->update($data);
-        Log::info('Cuidado aplicado actualizado', ['id' => $registro->id]);
-
-        return response()->json($registro, 200);
-    }
-
-    public function destroy($id)
-    {
-        $registro = CuidadoAplicado::findOrFail($id);
-        $registro->delete();
-
-        Log::warning('Cuidado aplicado eliminado', ['id' => $id]);
-        return response()->noContent();
+        return response()->json($cuidadoAplicado, 201);
     }
 }

@@ -16,11 +16,11 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('cuidado_id')->constrained('cuidados')->onDelete('cascade');
             $table->dateTime('fecha_aplicacion');
-            $table->string('estado');
             $table->string('observaciones')->nullable();
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

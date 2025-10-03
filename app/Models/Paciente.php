@@ -25,6 +25,12 @@ class Paciente extends Model
     protected $casts = [
         'estado' => 'boolean',
     ];
+     public function internacionActiva()
+    {
+        return $this->hasOne(Internacion::class)
+                    ->whereNull('fecha_alta')
+                    ->latest('fecha_ingreso');
+    }
     protected static function booted()
     {
         static::created(fn($p) => Log::info('Paciente creado', $p->toArray()));

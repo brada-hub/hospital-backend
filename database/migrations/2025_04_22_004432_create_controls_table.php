@@ -6,23 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('controls', function (Blueprint $table) {
             $table->id();
+            $table->string('tipo', 100);
             $table->foreignId('internacion_id')->constrained('internacions')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->dateTime('fecha_control');
-            $table->string('observaciones')->nullable();
+            // ✅ CORRECCIÓN: Se permite que las observaciones sean opcionales (nulas)
+            $table->text('observaciones')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('controls');

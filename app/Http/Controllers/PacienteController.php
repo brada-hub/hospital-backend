@@ -8,23 +8,37 @@ use Illuminate\Support\Facades\Log;
 
 class PacienteController extends Controller
 {
+    /**
+     * ✅ MODIFICADO: Ahora devuelve los pacientes junto con el ID de su internación activa.
+     */
     public function index()
     {
-        return Paciente::all();
+        // 1. Carga todos los pacientes y, en una sola consulta extra,
+        //    trae su 'internacionActiva' si existe (Eager Loading).
+        $pacientes = Paciente::with('internacionActiva')->latest()->get();
+
+        // 2. Mapeamos el resultado para crear el campo 'internacion_activa_id'
+        //    que el frontend necesita.
+        return $pacientes->map(function ($paciente) {
+            // Si existe una internación activa, asigna su ID. Si no, asigna null.
+            $paciente->internacion_activa_id = $paciente->internacionActiva?->id;
+            // Limpiamos la relación completa para no enviar datos de más al frontend.
+            unset($paciente->internacionActiva);
+            return $paciente;
+        });
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'ci'               => 'required|string|max:20|unique:pacientes,ci',
-            'nombre'           => 'required|string|max:50',
-            'apellidos'        => 'required|string|max:50',
+            'ci' => 'required|string|max:20|unique:pacientes,ci',
+            'nombre' => 'required|string|max:50',
+            'apellidos' => 'required|string|max:50',
             'fecha_nacimiento' => 'required|date',
-            'genero'           => 'required|in:masculino,femenino,otro',
-            'telefono'         => 'required|digits_between:7,15',
-            'direccion'        => 'required|string|max:255',
-            // CAMBIADO: La validación ahora es para un booleano.
-            'estado'           => 'required|boolean'
+            'genero' => 'required|in:masculino,femenino,otro',
+            'telefono' => 'required|digits_between:7,15',
+            'direccion' => 'required|string|max:255',
+            'estado' => 'required|boolean'
         ]);
 
         $paciente = Paciente::create($data);
@@ -52,7 +66,9 @@ class PacienteController extends Controller
 
     public function show($id)
     {
-        return Paciente::findOrFail($id);
+        // Para un solo paciente, también podemos cargar la internación activa
+        $paciente = Paciente::with('internacionActiva')->findOrFail($id);
+        return $paciente;
     }
 
     public function update(Request $request, $id)
@@ -60,15 +76,14 @@ class PacienteController extends Controller
         $paciente = Paciente::findOrFail($id);
 
         $data = $request->validate([
-            'ci'               => 'required|string|max:20|unique:pacientes,ci,' . $paciente->id,
-            'nombre'           => 'required|string|max:50',
-            'apellidos'        => 'required|string|max:50',
+            'ci' => 'required|string|max:20|unique:pacientes,ci,' . $paciente->id,
+            'nombre' => 'required|string|max:50',
+            'apellidos' => 'required|string|max:50',
             'fecha_nacimiento' => 'required|date',
-            'genero'           => 'required|in:masculino,femenino,otro',
-            'telefono'         => 'required|digits_between:7,15',
-            'direccion'        => 'required|string|max:255',
-            // CAMBIADO: La validación ahora es para un booleano.
-            'estado'           => 'required|boolean'
+            'genero' => 'required|in:masculino,femenino,otro',
+            'telefono' => 'required|digits_between:7,15',
+            'direccion' => 'required|string|max:255',
+            'estado' => 'required|boolean'
         ]);
 
         $paciente->update($data);
@@ -80,10 +95,7 @@ class PacienteController extends Controller
     public function destroy($id)
     {
         $paciente = Paciente::findOrFail($id);
-
-        // CAMBIADO: En lugar de borrar, ahora alterna el estado (activo/inactivo).
         $paciente->update(['estado' => !$paciente->estado]);
-
         Log::warning('Estado del paciente actualizado', ['id' => $id]);
 
         return response()->json([

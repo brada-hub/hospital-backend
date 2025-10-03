@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->string('unidad');
+            $table->boolean('es_rutinario')->default(true);
             $table->timestamps();
         });
     }

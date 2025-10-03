@@ -8,11 +8,17 @@ use Illuminate\Support\Facades\Log;
 
 class SignoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Signo::all();
-    }
+        $query = Signo::query();
 
+        // LÓGICA CLAVE: Si se pide 'rutinario', solo devuelve aquellos marcados como true
+        if ($request->query('tipo') === 'rutinario') {
+            $query->where('es_rutinario', true);
+        }
+
+        return response()->json($query->orderBy('nombre')->get());
+    }
     public function store(Request $request)
     {
         $data = $request->validate([

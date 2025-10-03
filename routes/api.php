@@ -9,12 +9,9 @@ use App\Http\Controllers\{
     InternacionController,
     MedicamentoController,
     SignoController,
-    AlimentacionController,
     HospitalController,
     TratamientoController,
     ControlController,
-    ValorController,
-    ConsumeController,
     CuidadoController,
     EspecialidadController,
     SalaController,
@@ -25,9 +22,9 @@ use App\Http\Controllers\{
     CuidadoAplicadoController,
     DashboardController,
     AdmisionController,
-    MedicamentoCategoriaController
+    MedicamentoCategoriaController,
+    SeguimientoController // Asegúrate que el nombre de tu controlador sea este
 };
-
 
 // Rutas públicas
 Route::get('/ping', fn() => response()->json(['pong' => true]));
@@ -38,14 +35,32 @@ Route::get('/hospital-details/{id}', [HospitalController::class, 'getHospitalDet
 // Rutas protegidas con Sanctum
 Route::middleware('auth:sanctum')->group(function () {
 
-    // --- RUTAS PERSONALIZADAS Y ESPECÍFICAS (VAN PRIMERO) ---
+    // --- RUTAS PERSONALIZADAS Y ESPECÍFICAS ---
+    Route::get('/me', [UserController::class, 'me']);
+    Route::post('/logout', [UserController::class, 'logout']);
 
-    // Rutas para el Módulo de Admisión
+    // Admisión
     Route::get('/camas-disponibles', [CamaController::class, 'getDisponibles']);
     Route::get('/pacientes/buscar', [PacienteController::class, 'buscar']);
+    Route::get('/medicos-activos', [UserController::class, 'getMedicosActivos']);
     Route::post('/admisiones', [AdmisionController::class, 'store']);
+    Route::get('/internaciones/{internacion}/vista-completa', [InternacionController::class, 'getVistaCompleta']);
+    Route::post('/internaciones/{internacion}/dar-de-alta', [InternacionController::class, 'darDeAlta']);
 
-    // Rutas del Dashboard
+    // Dashboard Médico
+    Route::get('/mis-pacientes', [InternacionController::class, 'getMisPacientes']);
+    Route::get('/internaciones/{id}/dashboard', [InternacionController::class, 'getDashboardData']);
+    Route::post('/tratamientos/{tratamiento}/suspender', [TratamientoController::class, 'suspender']);
+    Route::post('/tratamientos/{tratamiento}', [TratamientoController::class, 'update']); // Ruta para actualizar, usa POST con _method='PUT' o directamente PUT
+
+    // Estación de Enfermería
+    Route::get('/estacion-enfermeria/pacientes', [InternacionController::class, 'getPacientesParaEnfermeria']);
+    Route::post('/cuidados-directo', [CuidadoController::class, 'storeAplicadoDirecto']);
+
+    // ✅ RUTA ÚNICA Y CORRECTA PARA EL SEGUIMIENTO
+    Route::get('/seguimiento/tratamiento/{id}', [SeguimientoController::class, 'getEstadoTratamiento']);
+
+    // Dashboard Principal
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
         Route::get('/kpis', [DashboardController::class, 'getKpis']);
         Route::get('/ocupacion-especialidad', [DashboardController::class, 'getOcupacionPorEspecialidad']);
@@ -53,41 +68,30 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/ultimos-ingresos', [DashboardController::class, 'getUltimosIngresos']);
     });
 
-    // Rutas de usuario y roles
-    Route::put('/user/profile', [UserController::class, 'updateProfile']);
-    Route::put('/user/password', [UserController::class, 'updatePassword']);
-    Route::patch('/users/{user}/estado', [UserController::class, 'toggleEstado']);
-    Route::get('/me', [UserController::class, 'me']);
-    Route::post('/logout', [UserController::class, 'logout']);
+    // Administración de Roles y Permisos
     Route::put('/rols/{rol}/permissions', [RolController::class, 'syncPermissions']);
     Route::put('/users/{user}/permissions', [UserController::class, 'syncPermissions']);
+    Route::patch('/users/{user}/estado', [UserController::class, 'toggleEstado']);
 
-
-    // --- RUTAS DE RECURSOS (apiResource) (VAN DESPUÉS) ---
-
-    Route::apiResource('rols', RolController::class); // O 'rols', decide cuál usar
-    Route::apiResource('users', UserController::class); // O 'users'
-    Route::apiResource('pacientes', PacienteController::class);
-    Route::apiResource('internaciones', InternacionController::class);
-    Route::apiResource('medicamentos', MedicamentoController::class);
-    Route::apiResource('signos', SignoController::class);
-    Route::apiResource('alimentaciones', AlimentacionController::class);
-    Route::apiResource('hospitals', HospitalController::class);
-    Route::apiResource('tratamientos', TratamientoController::class);
-    Route::apiResource('controls', ControlController::class);
-    Route::apiResource('valores', ValorController::class);
-    Route::apiResource('consumes', ConsumeController::class);
-    Route::apiResource('cuidados', CuidadoController::class);
-    Route::apiResource('especialidades', EspecialidadController::class);
-    Route::apiResource('salas', SalaController::class);
-    Route::apiResource('camas', CamaController::class);
-    Route::apiResource('ocupaciones', OcupacionController::class);
-    Route::apiResource('recetas', RecetaController::class);
-    Route::apiResource('administraciones', AdministraController::class);
-    Route::apiResource('cuidados-aplicados', CuidadoAplicadoController::class);
-    Route::apiResource('permissions', PermissionController::class);
-    Route::apiResource('medicamento-categorias', MedicamentoCategoriaController::class);
-
-    // NOTA: He eliminado los apiResource duplicados para 'rols' y 'users'
-    // que tenías al final para evitar confusiones.
+    // --- RUTAS DE RECURSOS (apiResource) ---
+    Route::apiResources([
+        'rols' => RolController::class,
+        'users' => UserController::class,
+        'pacientes' => PacienteController::class,
+        'internaciones' => InternacionController::class,
+        'medicamentos' => MedicamentoController::class,
+        'signos' => SignoController::class,
+        'hospitals' => HospitalController::class,
+        'tratamientos' => TratamientoController::class,
+        'controls' => ControlController::class,
+        'especialidades' => EspecialidadController::class,
+        'salas' => SalaController::class,
+        'camas' => CamaController::class,
+        'ocupaciones' => OcupacionController::class,
+        'recetas' => RecetaController::class,
+        'administraciones' => AdministraController::class,
+        'cuidados-aplicados' => CuidadoAplicadoController::class,
+        'permissions' => PermissionController::class,
+        'medicamento-categorias' => MedicamentoCategoriaController::class,
+    ]);
 });

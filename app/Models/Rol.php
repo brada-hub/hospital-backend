@@ -10,17 +10,30 @@ class Rol extends Model
 {
     use HasFactory;
 
-    protected $table = 'rols'; // tabla en plural pero con 's'
-    protected $fillable = ['nombre', 'descripcion'];
+    protected $table = 'rols';
+
+    // ✅ 1. Añadido 'estado' a los campos rellenables.
+    protected $fillable = ['nombre', 'descripcion', 'estado'];
+
+    /**
+     * ✅ 2. Se asegura que el 'estado' sea tratado como booleano.
+     * Esto convierte automáticamente 1/0 a true/false.
+     */
+    protected $casts = [
+        'estado' => 'boolean',
+    ];
 
     public function usuarios()
     {
-        return $this->hasMany(User::class, 'rol_id'); // relación correcta con users
+        // 🚨 OJO: Asegúrate que el modelo User existe en App\Models\User
+        return $this->hasMany(User::class, 'rol_id');
     }
+
     public function permissions()
     {
         return $this->belongsToMany(Permission::class, 'role_permissions');
     }
+
     protected static function booted()
     {
         static::created(function ($rol) {

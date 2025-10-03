@@ -18,15 +18,18 @@ class Tratamiento extends Model
         'fecha_inicio',
         'fecha_fin',
         'observaciones',
+        'estado',
         'internacion_id',
         'user_id',
-
     ];
-
+    protected $casts = [
+        'estado' => 'integer',
+    ];
     public function internacion()
     {
         return $this->belongsTo(Internacion::class);
     }
+
     public function recetas()
     {
         return $this->hasMany(Receta::class);
@@ -36,6 +39,7 @@ class Tratamiento extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
     protected static function booted()
     {
         static::created(fn($t) => Log::info('Tratamiento creado', $t->toArray()));

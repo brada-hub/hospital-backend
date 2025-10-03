@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,7 +20,11 @@ class User extends Authenticatable
         'rol_id',
         'hospital_id',  // Este campo debe ser asignable masivamente
     ];
-
+    public function internaciones()
+    {
+        // El 'user_id' en la tabla 'internacions' se relaciona con el 'id' de la tabla 'users'.
+        return $this->hasMany(Internacion::class, 'user_id');
+    }
     protected $hidden = [
         'password',
         'remember_token',
@@ -63,5 +68,3 @@ class User extends Authenticatable
         return $this->rol->permissions->contains('nombre', $permission);
     }
 }
-
-

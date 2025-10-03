@@ -1,67 +1,61 @@
 <?php
+// app/Http/Controllers/CuidadoController.php
 
 namespace App\Http\Controllers;
 
 use App\Models\Cuidado;
+use App\Models\CuidadoAplicado;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CuidadoController extends Controller
 {
-    public function index()
-    {
-        return Cuidado::with('internacion')->get();
-    }
+    // ... (Mantén tus otros métodos como index, show, etc.)
 
-    public function store(Request $request)
+    /**
+     * Permite a la Enfermera registrar un Cuidado NUEVO y Aplicarlo inmediatamente.
+     * Es un cuidado "A Demanda" que se marca como FINALIZADO inmediatamente.
+     */
+    public function storeAplicadoDirecto(Request $request)
     {
         $data = $request->validate([
             'internacion_id' => 'required|exists:internacions,id',
-            'tipo'           => 'required|string|max:100',
-            'descripcion'    => 'required|string|max:255',
-            'fecha_inicio'   => 'required|date',
-            'fecha_fin'      => 'required|date|after_or_equal:fecha_inicio',
-            'frecuencia'     => 'required|string|max:100',
-            'estado'         => 'required|string|max:50',
+            // Solo pedimos un campo de texto que usaremos para ambas tablas.
+            'descripcion_completa' => 'required|string|max:255',
         ]);
 
-        $cuidado = Cuidado::create($data);
-        Log::info('Cuidado registrado', ['id' => $cuidado->id]);
+        try {
+            DB::beginTransaction();
 
-        return response()->json($cuidado, 201);
-    }
+            // 1. Crear el nuevo Cuidado (El Plan). Se marca como FINALIZADO (estado=1)
+            // para que NO aparezca en el dashboard de tareas pendientes.
+            $cuidado = Cuidado::create([
+                'internacion_id' => $data['internacion_id'],
+                'tipo'           => 'A Demanda - Enfermería',
+                'descripcion'    => $data['descripcion_completa'], // Descripción del plan
+                'fecha_inicio'   => Carbon::now(),
+                'frecuencia'     => 'Única Vez',
+                'estado'         => 1, // Finalizado inmediatamente.
+            ]);
 
-    public function show($id)
-    {
-        return Cuidado::with('internacion')->findOrFail($id);
-    }
+            // 2. Aplicar el Cuidado inmediatamente
+            CuidadoAplicado::create([
+                'cuidado_id'       => $cuidado->id,
+                'user_id'          => Auth::id(),
+                'fecha_aplicacion' => Carbon::now(),
+                'observaciones'    => $data['descripcion_completa'], // Observación de la aplicación
+            ]);
 
-    public function update(Request $request, $id)
-    {
-        $cuidado = Cuidado::findOrFail($id);
+            DB::commit();
 
-        $data = $request->validate([
-            'internacion_id' => 'required|exists:internacions,id',
-            'tipo'           => 'required|string|max:100',
-            'descripcion'    => 'required|string|max:255',
-            'fecha_inicio'   => 'required|date',
-            'fecha_fin'      => 'required|date|after_or_equal:fecha_inicio',
-            'frecuencia'     => 'required|string|max:100',
-            'estado'         => 'required|string|max:50',
-        ]);
-
-        $cuidado->update($data);
-        Log::info('Cuidado actualizado', ['id' => $cuidado->id]);
-
-        return response()->json($cuidado, 200);
-    }
-
-    public function destroy($id)
-    {
-        $cuidado = Cuidado::findOrFail($id);
-        $cuidado->delete();
-
-        Log::warning('Cuidado eliminado', ['id' => $id]);
-        return response()->noContent();
+            return response()->json(['message' => 'Cuidado A Demanda - Enfermería registrado correctamente.', 'cuidado_id' => $cuidado->id], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // Asegúrate de usar Log::error para registrar el problema.
+            \Illuminate\Support\Facades\Log::error('Error al crear y aplicar cuidado directo:', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Error interno al registrar el cuidado urgente.'], 500);
+        }
     }
 }

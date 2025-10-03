@@ -4,38 +4,31 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
-use App\Models\Usuario;
-use App\Models\Cuidado;
 
 class CuidadoAplicado extends Model
 {
     use HasFactory;
 
+    // Asumiendo que el nombre de la tabla es 'cuidados_aplicados'
     protected $table = 'cuidados_aplicados';
 
     protected $fillable = [
-        'usuario_id',
+        'user_id', // Enfermera que aplica el cuidado
         'cuidado_id',
-        'fecha_aplicacion',
-        'estado',
+        'fecha_aplicacion', // Cuándo se realizó (por defecto, Carbon::now())
+        // ✅ CORRECCIÓN: Se elimina 'estado' porque la migración ya no lo incluye.
         'observaciones',
     ];
 
-    public function usuario()
-    {
-        return $this->belongsTo(Usuario::class);
-    }
-
+    // Relación: Un Cuidado Aplicado pertenece a un Cuidado
     public function cuidado()
     {
         return $this->belongsTo(Cuidado::class);
     }
 
-    protected static function booted()
+    // Relación: Un Cuidado Aplicado fue registrado por un User (Enfermera)
+    public function user()
     {
-        static::created(fn($c) => Log::info('Cuidado aplicado creado', $c->toArray()));
-        static::updated(fn($c) => Log::info('Cuidado aplicado actualizado', $c->toArray()));
-        static::deleted(fn($c) => Log::info('Cuidado aplicado eliminado', $c->toArray()));
+        return $this->belongsTo(User::class);
     }
 }
