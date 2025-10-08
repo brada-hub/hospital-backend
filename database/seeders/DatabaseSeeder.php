@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
 
         // --- Creación de Hospital ---
         $hospital = Hospital::firstOrCreate(
-            ['nombre' => 'Hospital Central'],
+            ['nombre' => 'UNITEPC'],
             ['departamento' => 'Cochabamba', 'direccion' => 'Calle Ayacucho 123', 'nivel' => 'Nivel 3', 'tipo' => 'Público', 'telefono' => 70012345]
         );
 
@@ -119,6 +119,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             MedicamentoSeeder::class,
             SignoSeeder::class,
+            TipoDietaSeeder::class, // <-- AÑADE ESTA LÍNEA
         ]);
+        $this->call(InternacionCompletaSeeder::class);
     }
 }

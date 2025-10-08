@@ -15,8 +15,7 @@ class Medicamento extends Model
     protected $fillable = [
         'nombre',
         'descripcion',
-        'presentacion',
-        'via_administracion',
+
         'categoria_id'
     ];
     public function categoria()

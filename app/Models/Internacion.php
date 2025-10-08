@@ -42,7 +42,10 @@ class Internacion extends Model
         // Busca la ocupación donde la fecha de desocupación AÚN NO ha sido establecida (es NULL).
         return $this->hasOne(Ocupacion::class)->whereNull('fecha_desocupacion');
     }
-
+    public function alimentaciones()
+    {
+        return $this->hasMany(Alimentacion::class);
+    }
     public function medico()
     {
         return $this->belongsTo(User::class, 'user_id');

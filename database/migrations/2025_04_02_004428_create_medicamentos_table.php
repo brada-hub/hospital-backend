@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->string('descripcion');
-            $table->string('presentacion');
-            $table->string('via_administracion');
+
             $table->foreignId('categoria_id')->nullable()->constrained('medicamento_categorias');
             $table->timestamps();
         });

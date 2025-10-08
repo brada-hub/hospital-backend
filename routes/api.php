@@ -23,7 +23,12 @@ use App\Http\Controllers\{
     DashboardController,
     AdmisionController,
     MedicamentoCategoriaController,
-    SeguimientoController // Asegúrate que el nombre de tu controlador sea este
+    SeguimientoController,
+
+    // --- AÑADIR ESTOS TRES NUEVOS CONTROLADORES ---
+    TipoDietaController,
+    AlimentacionController,
+    ConsumeController
 };
 
 // Rutas públicas
@@ -51,15 +56,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/mis-pacientes', [InternacionController::class, 'getMisPacientes']);
     Route::get('/internaciones/{id}/dashboard', [InternacionController::class, 'getDashboardData']);
     Route::post('/tratamientos/{tratamiento}/suspender', [TratamientoController::class, 'suspender']);
-    Route::post('/tratamientos/{tratamiento}', [TratamientoController::class, 'update']); // Ruta para actualizar, usa POST con _method='PUT' o directamente PUT
+    Route::post('/tratamientos/{tratamiento}', [TratamientoController::class, 'update']);
 
     // Estación de Enfermería
     Route::get('/estacion-enfermeria/pacientes', [InternacionController::class, 'getPacientesParaEnfermeria']);
     Route::post('/cuidados-directo', [CuidadoController::class, 'storeAplicadoDirecto']);
 
-    // ✅ RUTA ÚNICA Y CORRECTA PARA EL SEGUIMIENTO
+    // Seguimiento
     Route::get('/seguimiento/tratamiento/{id}', [SeguimientoController::class, 'getEstadoTratamiento']);
-
+    Route::post('/alimentaciones/{alimentacion}/suspender', [AlimentacionController::class, 'suspender']);
+    // Generar cronograma manual
+    Route::post('/cronograma/generar/{receta}', [AdministraController::class, 'generarCronograma']);
     // Dashboard Principal
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
         Route::get('/kpis', [DashboardController::class, 'getKpis']);
@@ -72,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/rols/{rol}/permissions', [RolController::class, 'syncPermissions']);
     Route::put('/users/{user}/permissions', [UserController::class, 'syncPermissions']);
     Route::patch('/users/{user}/estado', [UserController::class, 'toggleEstado']);
+
 
     // --- RUTAS DE RECURSOS (apiResource) ---
     Route::apiResources([
@@ -93,5 +101,10 @@ Route::middleware('auth:sanctum')->group(function () {
         'cuidados-aplicados' => CuidadoAplicadoController::class,
         'permissions' => PermissionController::class,
         'medicamento-categorias' => MedicamentoCategoriaController::class,
+
+        // --- AÑADIR ESTAS TRES LÍNEAS AQUÍ ---
+        'tipos-dieta' => TipoDietaController::class,
+        'alimentaciones' => AlimentacionController::class,
+        'consumos' => ConsumeController::class,
     ]);
 });

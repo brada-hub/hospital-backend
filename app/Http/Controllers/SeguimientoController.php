@@ -3,76 +3,114 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tratamiento;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class SeguimientoController extends Controller
 {
-    public function getEstadoTratamiento($tratamiento_id)
+    // Sin constructor ni middleware - la protección está en las rutas
+    /**
+     * RF-06, RF-07: Obtener estado visual del tratamiento
+     *
+     * ⚠️ IMPORTANTE: Este endpoint NO modifica la BD, solo calcula estados visuales
+     */
+    public function getEstadoTratamiento($id)
     {
         $tratamiento = Tratamiento::with([
             'recetas.medicamento',
-            'recetas.administras' => fn($q) => $q->orderBy('fecha', 'desc')->with('user:id,nombre')
-        ])->findOrFail($tratamiento_id);
+            'recetas.administras' => function ($query) {
+                $query->orderBy('hora_programada', 'asc')
+                    ->with('user:id,nombre,apellidos');
+            }
+        ])->findOrFail($id);
 
-        $ahora = Carbon::now();
+        $hoy = Carbon::now(config('app.timezone'));
+        $inicioVentana = $hoy->copy()->startOfDay();
+        $finVentana = $hoy->copy()->endOfDay();
 
         foreach ($tratamiento->recetas as $receta) {
-            $horaBase = Carbon::parse($receta->created_at);
-            $fechaFin = $horaBase->copy()->addDays($receta->duracion_dias);
-            $frecuenciaHoras = $receta->frecuencia_horas;
+            $tomasHoy = [];
+            $administraciones = $receta->administras;
 
-            if ($frecuenciaHoras <= 0) {
-                $receta->tomas_hoy = [];
-                $receta->historial_completo = [];
-                continue;
-            }
+            if ($administraciones->isEmpty()) {
+                // 🔥 NO HAY CRONOGRAMA → Mostrar PRIMERA DOSIS PENDIENTE siempre
+                $fechaInicio = Carbon::parse($tratamiento->fecha_inicio, config('app.timezone'));
+                $primeraDosis = $fechaInicio->copy();
+                $frecuenciaHoras = $receta->frecuencia_horas;
 
-            $tomasConEstado = [];
-            $horaIterada = $horaBase->copy();
-
-            while ($horaIterada->lt($fechaFin)) {
-                $fueAdministrada = $receta->administras->first(function ($admin) use ($horaIterada, $frecuenciaHoras) {
-                    $horaAdmin = Carbon::parse($admin->fecha);
-                    // ✅ CORRECCIÓN: Usar $horaIterada en lugar de la variable indefinida
-                    return abs($horaAdmin->diffInMinutes($horaIterada)) < ($frecuenciaHoras * 60) / 2;
-                });
-
-                $status = 'Pendiente';
-                if ($fueAdministrada) {
-                    $status = 'Cumplida';
-                } elseif ($horaIterada->isPast() && $ahora->diffInMinutes($horaIterada) > 15) {
-                    $status = 'Omitida';
+                if ($primeraDosis->isPast() && $frecuenciaHoras > 0) {
+                    $horasPasadas = $hoy->diffInHours($primeraDosis);
+                    $ciclosPasados = floor($horasPasadas / $frecuenciaHoras);
+                    $primeraDosis->addHours(($ciclosPasados + 1) * $frecuenciaHoras);
                 }
 
-                $tomasConEstado[] = [
-                    'horaEsperada' => $horaIterada->toDateTimeString(),
-                    'status' => $status,
-                    'datosAdministracion' => $fueAdministrada
+                $tomasHoy[] = [
+                    'id' => null,
+                    'horaReal' => $primeraDosis->toDateTimeString(),
+                    'status' => $primeraDosis->isPast() ? '¡ATRASADA!' : 'Pendiente',
+                    'datosAdministracion' => null,
                 ];
-                $horaIterada->addHours($frecuenciaHoras);
+            } else {
+                // RF-06, RF-07: Filtrar administraciones del día de hoy
+                $administracionesHoy = $administraciones->filter(function ($admin) use ($inicioVentana, $finVentana) {
+                    $hora = Carbon::parse($admin->hora_programada);
+                    return $hora->between($inicioVentana, $finVentana);
+                });
+
+                foreach ($administracionesHoy as $admin) {
+                    $status = $this->calcularStatusVisual($admin, $hoy);
+
+                    $tomasHoy[] = [
+                        'id' => $admin->id,
+                        'horaReal' => $admin->hora_programada,
+                        'status' => $status,
+                        'datosAdministracion' => ($admin->estado == 1 || $admin->estado == 2) ? $admin : null,
+                    ];
+                }
             }
 
-            $tomasHoy = collect($tomasConEstado)->filter(fn($t) => Carbon::parse($t['horaEsperada'])->isToday())->values();
-            $ultimaPasadaHoy = $tomasHoy->filter(fn($t) => Carbon::parse($t['horaEsperada'])->isPast())->last();
-            $proximaPendienteHoy = $tomasHoy->first(fn($t) => !Carbon::parse($t['horaEsperada'])->isPast());
+            $receta->tomas_hoy = $tomasHoy;
 
-            $tomasParaMostrarHoy = [];
-            if ($ultimaPasadaHoy) $tomasParaMostrarHoy[] = $ultimaPasadaHoy;
-            if ($proximaPendienteHoy && (!$ultimaPasadaHoy || $ultimaPasadaHoy['horaEsperada'] != $proximaPendienteHoy['horaEsperada'])) {
-                $tomasParaMostrarHoy[] = $proximaPendienteHoy;
-            }
-            $receta->tomas_hoy = $tomasParaMostrarHoy;
-
-            $historialCompleto = collect($tomasConEstado)
-                ->filter(fn($t) => $t['status'] !== 'Pendiente')
-                ->sortByDesc('horaEsperada')
-                ->values()
-                ->all();
-
-            $receta->historial_completo = $historialCompleto;
+            // 🔥 IMPORTANTE: Mantener administras en la respuesta para el temporizador
+            // NO eliminar esta relación porque el frontend la necesita
         }
 
         return response()->json($tratamiento);
+    }
+
+    /**
+     * RF-06: Calcular estado visual de una dosis (sin modificar BD)
+     *
+     * Estados en BD:
+     * - 0 = Pendiente (no administrada)
+     * - 1 = Cumplida (a tiempo)
+     * - 2 = Cumplida con retraso
+     *
+     * Estados visuales:
+     * - "Pendiente" → aún no llega la hora o está en ventana
+     * - "¡ATRASADA!" → pasó la hora y sigue sin administrar
+     * - "Cumplida" → administrada a tiempo
+     * - "Cumplida (Retrasada)" → administrada tarde
+     */
+    private function calcularStatusVisual($admin, Carbon $ahora)
+    {
+        // RF-05: Si ya fue administrada, mostrar el estado definitivo
+        if ($admin->estado == 1) {
+            return 'Cumplida';
+        }
+
+        if ($admin->estado == 2) {
+            return 'Cumplida (Retrasada)';
+        }
+
+        // RF-06: Dosis pendiente (estado=0) → evaluar si está atrasada visualmente
+        $horaProgramada = Carbon::parse($admin->hora_programada);
+
+        // Si la hora programada ya pasó hace más de 30 minutos → visualmente atrasada
+        if ($ahora->greaterThan($horaProgramada->copy()->addMinutes(30))) {
+            return '¡ATRASADA!';
+        }
+
+        // Aún está pendiente dentro de la ventana
+        return 'Pendiente';
     }
 }

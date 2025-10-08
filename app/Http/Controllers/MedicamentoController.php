@@ -19,8 +19,7 @@ class MedicamentoController extends Controller
         $data = $request->validate([
             'nombre'             => 'required|string|max:100|unique:medicamentos,nombre',
             'descripcion'        => 'required|string|max:255',
-            'presentacion'       => 'required|string|max:100',
-            'via_administracion' => 'required|string|max:100',
+
             // MEJORA: Se añade la validación para que la categoría exista.
             'categoria_id'       => 'nullable|exists:medicamento_categorias,id',
         ]);
@@ -44,8 +43,7 @@ class MedicamentoController extends Controller
         $data = $request->validate([
             'nombre'             => 'required|string|max:100|unique:medicamentos,nombre,' . $medicamento->id,
             'descripcion'        => 'required|string|max:255',
-            'presentacion'       => 'required|string|max:100',
-            'via_administracion' => 'required|string|max:100',
+
             // MEJORA: Se añade la validación para que la categoría exista.
             'categoria_id'       => 'nullable|exists:medicamento_categorias,id',
         ]);

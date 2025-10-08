@@ -14,19 +14,18 @@ return new class extends Migration
         Schema::create('administras', function (Blueprint $table) {
             $table->id();
             $table->foreignId('receta_id')->constrained('recetas')->onDelete('cascade');
-            // ✅ Estandarizando el nombre del campo para la relación a 'users'
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->dateTime('fecha');
+            $table->dateTime('hora_programada');
 
-            // ❌ CAMBIO CLAVE: Se elimina 'dosis' ya que se obtiene de 'recetas'
-            // $table->string('dosis');
+            // ✅ CORRECCIÓN CRÍTICA: Debe ser nullable para las dosis pendientes
+            $table->foreignId('user_id')->nullable()->constrained('users');
 
-            // ✅ CAMBIO CLAVE: Se cambia a integer para usar códigos de estado (ej: 1=Administrado, 2=Retrasado)
-            $table->unsignedTinyInteger('estado');
+            // ✅ CORRECCIÓN CRÍTICA: Debe ser nullable porque aún no se ha administrado
+            $table->dateTime('fecha')->nullable();
 
-            // ✅ OBSERVACIONES: Mantenido como nullable, útil para registrar incidentes o notas
+            // Usaremos: 0=Pendiente, 1=Cumplida
+            $table->unsignedTinyInteger('estado')->default(0);
+
             $table->string('observaciones')->nullable();
-
             $table->timestamps();
         });
     }

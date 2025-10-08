@@ -4,26 +4,33 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
 
 class Alimentacion extends Model
 {
     use HasFactory;
-
     protected $table = 'alimentacions';
 
     protected $fillable = [
-        'tipo_dieta',
+        'internacion_id',
+        'tipo_dieta_id',
         'frecuencia',
         'fecha_inicio',
         'fecha_fin',
         'descripcion',
+        'estado', // <-- AÑADIR
+        'motivo_suspension', // <-- AÑADIR
     ];
 
-    protected static function booted()
+
+    // ... tus relaciones aquí ...
+    public function tipoDieta()
     {
-        static::created(fn($a) => Log::info('Alimentación creada', $a->toArray()));
-        static::updated(fn($a) => Log::info('Alimentación actualizada', $a->toArray()));
-        static::deleted(fn($a) => Log::info('Alimentación eliminada', $a->toArray()));
+        return $this->belongsTo(TipoDieta::class, 'tipo_dieta_id');
+    }
+
+    // Es buena idea añadir también la relación inversa
+    public function internacion()
+    {
+        return $this->belongsTo(Internacion::class);
     }
 }

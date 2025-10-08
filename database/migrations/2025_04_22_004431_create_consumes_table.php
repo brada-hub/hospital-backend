@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('consumes', function (Blueprint $table) {
@@ -17,14 +14,12 @@ return new class extends Migration
             $table->foreignId('alimentacion_id')->constrained('alimentacions')->onDelete('cascade');
             $table->string('observaciones')->nullable();
             $table->dateTime('fecha');
-            $table->boolean('estado');
+            // CAMBIO: Se reemplaza el booleano 'estado' por un entero para el porcentaje.
+            $table->unsignedTinyInteger('porcentaje_consumido')->default(0); // Valor de 0 a 100
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('consumes');

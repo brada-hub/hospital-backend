@@ -22,36 +22,31 @@ class MedicamentoSeeder extends Seeder
                 'categoria_id' => $analgesico->id,
                 'nombre' => 'Paracetamol',
                 'descripcion' => 'Analgésico y antipirético para fiebre y dolor leve a moderado.',
-                'presentacion' => 'Comprimido 500mg',
-                'via_administracion' => 'Oral'
+
             ],
             [
                 'categoria_id' => $analgesico->id,
                 'nombre' => 'Ketorolaco',
                 'descripcion' => 'AINE para dolor agudo de moderado a severo.',
-                'presentacion' => 'Solución Inyectable 30mg/mL',
-                'via_administracion' => 'Intravenosa'
+
             ],
             [
                 'categoria_id' => $antibiotico->id,
                 'nombre' => 'Amoxicilina con Ácido Clavulánico',
                 'descripcion' => 'Antibiótico de amplio espectro.',
-                'presentacion' => 'Comprimido 875mg/125mg',
-                'via_administracion' => 'Oral'
+
             ],
             [
                 'categoria_id' => $fluidoterapia->id,
                 'nombre' => 'Solución Salina 0.9%',
                 'descripcion' => 'Suero fisiológico para hidratación.',
-                'presentacion' => 'Bolsa 1000mL',
-                'via_administracion' => 'Intravenosa'
+
             ],
             [
                 'categoria_id' => $gastro->id,
                 'nombre' => 'Omeprazol',
                 'descripcion' => 'Protector gástrico para prevenir úlceras.',
-                'presentacion' => 'Solución Inyectable 40mg',
-                'via_administracion' => 'Intravenosa'
+
             ],
         ];
 
