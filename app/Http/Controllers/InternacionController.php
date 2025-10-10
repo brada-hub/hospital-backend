@@ -6,21 +6,26 @@ use App\Models\Internacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class InternacionController extends Controller
 {
     /**
-     * Muestra una lista de todas las internaciones.
+     * 📋 Muestra todas las internaciones con paciente y médico.
      */
     public function index()
     {
-        return Internacion::with(['paciente', 'medico'])->latest('fecha_ingreso')->get();
+        return response()->json(
+            Internacion::with(['paciente', 'medico'])
+                ->latest('fecha_ingreso')
+                ->get()
+        );
     }
 
     /**
-     * Almacena una nueva internación en la base de datos.
+     * ➕ Crea una nueva internación.
      */
     public function store(Request $request)
     {
@@ -30,30 +35,29 @@ class InternacionController extends Controller
             'diagnostico'    => 'required|string|max:255',
             'observaciones'  => 'nullable|string|max:255',
             'paciente_id'    => 'required|exists:pacientes,id',
-            'user_id'        => 'required|exists:users,id', // médico que internó
+            'user_id'        => 'required|exists:users,id',
         ]);
 
         $internacion = Internacion::create($data);
+
         Log::info('Internación registrada', ['id' => $internacion->id]);
 
         return response()->json($internacion->load(['paciente', 'medico']), 201);
     }
 
     /**
-     * Muestra una internación específica.
+     * 👁️ Muestra los datos de una internación específica.
      */
-    public function show($id)
+    public function show(Internacion $internacion)
     {
-        return Internacion::with(['paciente', 'medico'])->findOrFail($id);
+        return response()->json($internacion->load(['paciente', 'medico']));
     }
 
     /**
-     * Actualiza una internación específica.
+     * ✏️ Actualiza una internación.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Internacion $internacion)
     {
-        $internacion = Internacion::findOrFail($id);
-
         $data = $request->validate([
             'fecha_ingreso'  => 'required|date',
             'fecha_alta'     => 'nullable|date|after_or_equal:fecha_ingreso',
@@ -65,31 +69,29 @@ class InternacionController extends Controller
         ]);
 
         $internacion->update($data);
+
         Log::info('Internación actualizada', ['id' => $internacion->id]);
 
-        return response()->json($internacion->load(['paciente', 'medico']), 200);
+        return response()->json($internacion->load(['paciente', 'medico']));
     }
 
     /**
-     * Elimina una internación.
+     * 🗑️ Elimina una internación.
      */
-    public function destroy($id)
+    public function destroy(Internacion $internacion)
     {
-        $internacion = Internacion::findOrFail($id);
         $internacion->delete();
+        Log::warning('Internación eliminada', ['id' => $internacion->id]);
 
-        Log::warning('Internación eliminada', ['id' => $id]);
         return response()->noContent();
     }
 
-    // --- MÉTODOS DE LÓGICA DE NEGOCIO ---
+    // ------------------------------------------------------------------------
+    // 🧠 MÉTODOS DE NEGOCIO PERSONALIZADOS
+    // ------------------------------------------------------------------------
 
     /**
-     * ✅ MÉTODO PRINCIPAL PARA EL PANEL DEL PACIENTE
-     * Devuelve una vista completa de la internación con todas las relaciones necesarias para el frontend.
-     */
-    /**
-     * ✅ MÉTODO PARA EL PANEL DEL MÉDICO
+     * 🧾 Vista completa de la internación para panel médico o enfermería.
      */
     public function getVistaCompleta(Internacion $internacion)
     {
@@ -97,152 +99,173 @@ class InternacionController extends Controller
             'paciente',
             'medico',
             'ocupacionActiva.cama.sala',
-            'tratamientos.medico',
+
+            'tratamientos' => function ($query) {
+                $query->with(['medico', 'recetas.medicamento']);
+            },
+
             'alimentaciones.tipoDieta',
-            'controls.user.rol',
-            'controls.valores.signo',
+
+            // ✅ CRÍTICO: Cargar controles con TODAS sus relaciones
+            'controles' => function ($query) {
+                $query->orderBy('fecha_control', 'desc')
+                    ->with(['user.rol', 'valores.signo']);
+            },
+
             'cuidados.cuidadosAplicados.user:id,nombre,apellidos',
         ]);
 
         $this->transformarDatosParaFrontend($internacion);
+
         return response()->json($internacion);
     }
 
     /**
-     * ✅ MÉTODO PARA LA ESTACIÓN DE ENFERMERÍA
+     * 👩‍⚕️ Pacientes activos del médico autenticado.
+     */
+    public function getMisPacientes()
+    {
+        $medicoId = Auth::id();
+
+        return response()->json(
+            Internacion::delMedico($medicoId)
+                ->activas()
+                ->with(['paciente', 'ocupacionActiva.cama.sala'])
+                ->latest('fecha_ingreso')
+                ->get()
+        );
+    }
+
+    /**
+     * 🏥 Pacientes activos para estación de enfermería.
      */
     public function getPacientesParaEnfermeria()
     {
-        $internaciones = Internacion::whereNull('fecha_alta')
+        Log::info('Iniciando carga de pacientes para Estación de Enfermería...');
+
+        $internaciones = Internacion::activas()
             ->with([
                 'paciente:id,nombre,apellidos,ci',
+                'medico:id,nombre,apellidos',
                 'ocupacionActiva.cama.sala:id,nombre',
-                'tratamientos' => fn($q) => $q->where('estado', 0)->with([
-                    'recetas.medicamento:id,nombre',
-                    'recetas.administras' => fn($q) => $q->orderBy('fecha', 'desc')->with('user:id,nombre,apellidos'),
-                    'medico:id,nombre,apellidos',
-                ]),
-                'controls.user.rol',
-                'controls.valores.signo',
+                'tratamientos' => function ($query) {
+                    $query->where('estado', 0)->with([
+                        'medico:id,nombre,apellidos',
+                        'recetas' => function ($q_receta) {
+                            $q_receta->where('estado', 0);
+                        },
+                        'recetas.medicamento:id,nombre',
+                        'recetas.administras' => fn($q) => $q->latest('fecha')->with('user:id,nombre,apellidos'),
+                    ]);
+                },
+                'controles' => function ($query) {
+                    $query->orderBy('fecha_control', 'desc')
+                        ->with(['user.rol', 'valores.signo']);
+                },
                 'cuidados.cuidadosAplicados.user:id,nombre,apellidos',
+                'alimentaciones.tipoDieta'
             ])
             ->latest('fecha_ingreso')
             ->get();
 
+        Log::info(count($internaciones) . ' internaciones activas encontradas. Procesando datos...');
+
+        // Procesa cada internación para preparar los datos para el frontend
         $internaciones->each(function ($internacion) {
+            Log::info('Procesando Internacion ID: ' . $internacion->id . '. Controles encontrados: ' . $internacion->controles->count());
+
+            // 1. Aplica las transformaciones generales (separa plan de cuidados, calcula IMC, etc.)
             $this->transformarDatosParaFrontend($internacion);
+
+            // 2. ✅ SOLUCIÓN CLAVE: Nos aseguramos de que la colección 'controles' tenga índices numéricos
+            // consecutivos (0, 1, 2...). Esto garantiza que PHP lo convierta a un array JSON `[...]`
+            // en lugar de un objeto JSON `{...}`.
+            if ($internacion->controles instanceof Collection) {
+                $internacion->setRelation('controles', $internacion->controles->values());
+            }
         });
+
+        Log::info('Procesamiento completo. Enviando respuesta final al frontend.');
 
         return response()->json($internaciones);
     }
 
     /**
-     * ✅ NUEVA FUNCIÓN PRIVADA PARA TRANSFORMAR DATOS
-     * Centraliza la lógica para ordenar y separar datos.
+     * ✅ Da de alta al paciente y libera la cama.
      */
-    private function transformarDatosParaFrontend(Internacion $internacion)
-    {
-        $internacion->setRelation('controls', $internacion->controls->sortByDesc('fecha_control')->values());
-
-        if ($internacion->relationLoaded('cuidados') && $internacion->cuidados->isNotEmpty()) {
-            $partitions = $internacion->cuidados->partition(fn($cuidado) => $cuidado->estado === 0);
-            $internacion->plan_de_cuidados = $partitions[0]->values();
-            $internacion->evolucion_enfermeria = $partitions[1]->sortByDesc(
-                fn($c) => $c->cuidadosAplicados->first()->fecha_aplicacion ?? $c->created_at
-            )->values();
-        } else {
-            $internacion->plan_de_cuidados = [];
-            $internacion->evolucion_enfermeria = [];
-        }
-        unset($internacion->cuidados);
-
-        $this->calcularDatosAntropometricos($internacion);
-    }
-    /**
-     * Obtiene los pacientes activos para el médico autenticado.
-     */
-    public function getMisPacientes(Request $request)
-    {
-        $medicoId = Auth::id();
-
-        $internacionesActivas = Internacion::where('user_id', $medicoId)
-            ->whereNull('fecha_alta')
-            ->with(['paciente', 'ocupacionActiva.cama.sala'])
-            ->latest('fecha_ingreso')
-            ->get();
-
-        return response()->json($internacionesActivas);
-    }
-
-    /**
-     * Marca la fecha de alta de un paciente y libera los recursos asociados.
-     */
-    public function darDeAlta(Request $request, Internacion $internacion)
+    public function darDeAlta(Internacion $internacion)
     {
         if ($internacion->fecha_alta) {
-            return response()->json(['message' => 'Este paciente ya fue dado de alta.'], 400);
+            return response()->json(['message' => 'El paciente ya fue dado de alta.'], 400);
         }
 
         try {
             DB::transaction(function () use ($internacion) {
-                // 1. Damos de alta al paciente
-                $internacion->fecha_alta = Carbon::now();
-                $internacion->save();
+                $internacion->update(['fecha_alta' => now()]);
 
-                // 2. Finalizamos tratamientos activos (estado 0 -> 2)
                 $internacion->tratamientos()->where('estado', 0)->update(['estado' => 2]);
 
-                // 3. Liberamos la cama
                 if ($ocupacion = $internacion->ocupacionActiva) {
-                    $ocupacion->fecha_desocupacion = Carbon::now();
-                    $ocupacion->save();
-
-                    if ($cama = $ocupacion->cama) {
-                        $cama->disponibilidad = 1; // 1 = Disponible
-                        $cama->save();
-                    }
+                    $ocupacion->update(['fecha_desocupacion' => now()]);
+                    $ocupacion->cama?->update(['disponibilidad' => 1]);
                 }
             });
-        } catch (\Exception $e) {
-            Log::error('Error al dar de alta al paciente:', ['error' => $e->getMessage()]);
+
+            Log::info('Paciente dado de alta', ['id' => $internacion->id]);
+        } catch (\Throwable $e) {
+            Log::error('Error al dar de alta', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error interno al procesar el alta.'], 500);
         }
 
         return response()->json(['message' => 'Paciente dado de alta exitosamente.']);
     }
 
-    /**
-     * Obtiene los datos necesarios para la estación de enfermería.
-     */
+    // ------------------------------------------------------------------------
+    // 🔧 MÉTODOS PRIVADOS AUXILIARES
+    // ------------------------------------------------------------------------
 
+    private function transformarDatosParaFrontend(Internacion $internacion)
+    {
+        $internacion->setRelation('controles', $internacion->controles->sortByDesc('fecha_control')->values());
 
-    /**
-     * Función auxiliar para calcular peso, altura e IMC.
-     */
+        if ($internacion->relationLoaded('cuidados') && $internacion->cuidados->isNotEmpty()) {
+            [$plan, $evolucion] = $internacion->cuidados->partition(fn($c) => $c->estado === 0);
+
+            $internacion->plan_de_cuidados = $plan->values();
+            $internacion->evolucion_enfermeria = $evolucion
+                ->sortByDesc(fn($c) => $c->cuidadosAplicados->first()->fecha_aplicacion ?? $c->created_at)
+                ->values();
+        } else {
+            $internacion->plan_de_cuidados = [];
+            $internacion->evolucion_enfermeria = [];
+        }
+
+        unset($internacion->cuidados);
+
+        $this->calcularDatosAntropometricos($internacion);
+    }
+
     private function calcularDatosAntropometricos(Internacion $internacion)
     {
         $datos = ['peso' => 'No registrado', 'altura' => 'No registrada', 'imc' => null];
 
-        $controlDeIngreso = $internacion->controls->sortBy('fecha_control')->first(function ($control) {
-            return $control->valores->contains(fn($v) => in_array($v->signo->nombre, ['Peso', 'Altura']));
-        });
+        $controlDeIngreso = $internacion->controles
+            ->sortBy('fecha_control')
+            ->first(fn($c) => $c->valores->contains(fn($v) => in_array($v->signo->nombre, ['Peso', 'Altura'])));
 
         if ($controlDeIngreso) {
-            $pesoValor = $controlDeIngreso->valores->firstWhere('signo.nombre', 'Peso');
-            $alturaValor = $controlDeIngreso->valores->firstWhere('signo.nombre', 'Altura');
+            $peso = $controlDeIngreso->valores->firstWhere('signo.nombre', 'Peso');
+            $altura = $controlDeIngreso->valores->firstWhere('signo.nombre', 'Altura');
 
-            if ($pesoValor) {
-                $datos['peso'] = $pesoValor->medida . ' ' . $pesoValor->signo->unidad;
-            }
-            if ($alturaValor) {
-                $datos['altura'] = $alturaValor->medida . ' ' . $alturaValor->signo->unidad;
-            }
+            if ($peso) $datos['peso'] = $peso->medida . ' ' . $peso->signo->unidad;
+            if ($altura) $datos['altura'] = $altura->medida . ' ' . $altura->signo->unidad;
 
-            if ($pesoValor && $alturaValor && is_numeric($pesoValor->medida) && is_numeric($alturaValor->medida) && $alturaValor->medida > 0) {
-                $alturaM = (float) $alturaValor->medida / 100;
-                $datos['imc'] = round((float) $pesoValor->medida / ($alturaM ** 2), 1);
+            if ($peso && $altura && is_numeric($peso->medida) && is_numeric($altura->medida) && $altura->medida > 0) {
+                $alturaM = $altura->medida / 100;
+                $datos['imc'] = round($peso->medida / ($alturaM ** 2), 1);
             }
         }
+
         $internacion->datos_antropometricos = $datos;
     }
 }

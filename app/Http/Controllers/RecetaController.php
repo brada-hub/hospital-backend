@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Receta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class RecetaController extends Controller
 {
@@ -59,5 +60,33 @@ class RecetaController extends Controller
 
         Log::warning('Receta eliminada', ['id' => $id]);
         return response()->noContent();
+    }
+    public function suspender(Request $request, Receta $receta)
+    {
+        if ($receta->estado !== 0) {
+            return response()->json(['message' => 'Esta receta no está activa.'], 409);
+        }
+
+        $data = $request->validate([
+            'motivo' => 'required|string|min:10|max:255'
+        ]);
+
+        $nuevasIndicaciones = trim($receta->indicaciones . "\n\nSUSPENDIDO (" . now()->format('d/m/Y') . "): " . $data['motivo']);
+
+        $receta->update([
+            'estado' => 1, // 1 = Suspendido
+            'indicaciones' => $nuevasIndicaciones
+        ]);
+
+        Log::warning('Receta suspendida', [
+            'id' => $receta->id,
+            'motivo' => $data['motivo'],
+            'user_id' => Auth::id() // Ahora PHP sabrá qué es "Auth"
+        ]);
+
+        return response()->json([
+            'message' => 'Medicamento suspendido con éxito.',
+            'data' => $receta
+        ]);
     }
 }

@@ -21,6 +21,7 @@ class Receta extends Model
         'frecuencia_horas',
         'duracion_dias',
         'indicaciones',
+        'estado',
     ];
 
     // Nuevo accessor para calcular la fecha de fin

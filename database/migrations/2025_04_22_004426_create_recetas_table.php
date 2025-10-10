@@ -21,7 +21,8 @@ return new class extends Migration
             $table->integer('frecuencia_horas'); // Ejemplo: 8 (cada 8 horas)
             $table->integer('duracion_dias'); // Ejemplo: 7 (por 7 días)
             $table->string('via_administracion');
-            $table->text('indicaciones')->nullable(); // Instrucciones adicionales, ej: "Tomar con alimentos"
+            $table->text('indicaciones')->nullable();
+            $table->tinyInteger('estado')->default(0); // Instrucciones adicionales, ej: "Tomar con alimentos"
             $table->timestamps();
         });
     }

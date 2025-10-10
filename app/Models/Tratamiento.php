@@ -34,7 +34,10 @@ class Tratamiento extends Model
     {
         return $this->hasMany(Receta::class);
     }
-
+    public function cuidados()
+    {
+        return $this->hasMany(Cuidado::class);
+    }
     public function medico()
     {
         return $this->belongsTo(User::class, 'user_id');
