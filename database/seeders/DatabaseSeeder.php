@@ -122,5 +122,7 @@ class DatabaseSeeder extends Seeder
             TipoDietaSeeder::class, // <-- AÑADE ESTA LÍNEA
         ]);
         $this->call(InternacionCompletaSeeder::class);
+
+        $this->call(RangosNormalesSeeder::class); // 2. Ahora sí puedes llenar los 'rangos_normales'
     }
 }

@@ -26,7 +26,8 @@ use App\Http\Controllers\{
     SeguimientoController,
     TipoDietaController,
     AlimentacionController,
-    ConsumeController
+    ConsumeController,
+    NotificacionController
 };
 
 // ---------------------------
@@ -104,6 +105,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/rols/{rol}/permissions', [RolController::class, 'syncPermissions']);
     Route::put('/users/{user}/permissions', [UserController::class, 'syncPermissions']);
     Route::patch('/users/{user}/estado', [UserController::class, 'toggleEstado']);
+    // Notificaciones
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/notificaciones', [NotificacionController::class, 'index']);
+        Route::get('/notificaciones/no-leidas/count', [NotificacionController::class, 'contarNoLeidas']);
+        Route::patch('/notificaciones/{id}/leer', [NotificacionController::class, 'marcarComoLeida']);
+        Route::post('/notificaciones/leer-todas', [NotificacionController::class, 'marcarTodasComoLeidas']);
+        Route::delete('/notificaciones/{id}', [NotificacionController::class, 'eliminar']);
+    });
 
     // --- RUTAS DE RECURSOS (apiResource) ---
     Route::apiResources([

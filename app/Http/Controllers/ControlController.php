@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Control;
+use App\Models\Valor;
+use App\Models\RangoNormal;
+use App\Models\Signo;
+use App\Models\Notificacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -11,7 +15,6 @@ use Carbon\Carbon;
 
 class ControlController extends Controller
 {
-
     /**
      * Guarda una nueva nota de evolución.
      */
@@ -34,7 +37,7 @@ class ControlController extends Controller
                 'observaciones'  => 'nullable|string',
                 'valores'        => 'required|array|min:1',
                 'valores.*.signo_id' => 'required|exists:signos,id',
-                'valores.*.medida'   => 'required|string|max:50',
+                'valores.*.medida'   => 'required|numeric',
             ]);
 
             try {
@@ -47,9 +50,49 @@ class ControlController extends Controller
                         'observaciones'  => $data['observaciones'] ?? null,
                     ]);
 
-                    $control->valores()->createMany($data['valores']);
-                    Log::info('Control de signos vitales registrado', ['id' => $control->id]);
-                    return response()->json($control->load('valores.signo'), 201);
+                    $alertasGeneradas = [];
+
+                    foreach ($data['valores'] as $valor) {
+                        // Guardar el valor
+                        Valor::create([
+                            'control_id' => $control->id,
+                            'signo_id' => $valor['signo_id'],
+                            'medida' => $valor['medida'],
+                        ]);
+
+                        // Verificar si está fuera de rango
+                        $rango = RangoNormal::where('signo_id', $valor['signo_id'])->first();
+
+                        if ($rango) {
+                            $medida = (float) $valor['medida'];
+
+                            if ($rango->estaFueraDeRango($medida)) {
+                                $signo = Signo::find($valor['signo_id']);
+                                $alertasGeneradas[] = [
+                                    'signo' => $signo->nombre,
+                                    'valor' => $medida,
+                                    'unidad' => $signo->unidad,
+                                    'rango' => "{$rango->valor_minimo} - {$rango->valor_maximo}",
+                                ];
+                            }
+                        }
+                    }
+
+                    // Si hay alertas, notificar al doctor
+                    if (!empty($alertasGeneradas)) {
+                        $this->enviarAlertaADoctor($control, $alertasGeneradas);
+                    }
+
+                    Log::info('Control de signos vitales registrado', [
+                        'id' => $control->id,
+                        'alertas' => count($alertasGeneradas)
+                    ]);
+
+                    return response()->json([
+                        'message' => 'Signos vitales registrados correctamente',
+                        'control' => $control->load('valores.signo'),
+                        'alertas_generadas' => count($alertasGeneradas),
+                    ], 201);
                 });
             } catch (\Exception $e) {
                 Log::error('Error al registrar control', ['error' => $e->getMessage()]);
@@ -73,6 +116,31 @@ class ControlController extends Controller
         }
     }
 
+    private function enviarAlertaADoctor($control, $alertas)
+    {
+        $internacion = $control->internacion()->with('paciente')->first();
+        $doctorId = $internacion->user_id;
+
+        $pacienteNombre = "{$internacion->paciente->nombre} {$internacion->paciente->apellidos}";
+
+        // Construir mensaje
+        $mensajeDetalle = "Los siguientes signos vitales están fuera de rango:\n\n";
+        foreach ($alertas as $alerta) {
+            $mensajeDetalle .= "• {$alerta['signo']}: {$alerta['valor']} {$alerta['unidad']} ";
+            $mensajeDetalle .= "(Rango normal: {$alerta['rango']})\n";
+        }
+
+        // Crear notificación
+        Notificacion::create([
+            'user_id' => $doctorId,
+            'internacion_id' => $internacion->id,
+            'control_id' => $control->id,
+            'tipo' => 'critica',
+            'titulo' => "⚠️ Alerta: Signos vitales anormales - {$pacienteNombre}",
+            'mensaje' => $mensajeDetalle,
+            'leida' => false,
+        ]);
+    }
 
     /**
      * Muestra una nota de evolución específica.
@@ -84,7 +152,6 @@ class ControlController extends Controller
 
     /**
      * Actualiza una nota de evolución.
-     * (Generalmente las notas no se editan, pero se incluye por si acaso)
      */
     public function update(Request $request, Control $control)
     {
