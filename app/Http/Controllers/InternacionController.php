@@ -212,12 +212,40 @@ class InternacionController extends Controller
             });
 
             Log::info('Paciente dado de alta', ['id' => $internacion->id]);
+
+            try {
+                $reporteController = new \App\Http\Controllers\ReporteController();
+                $pdf = $reporteController->generarEpicrisis($internacion->id);
+
+                // Guardar el PDF en storage para acceso posterior
+                $nombreArchivo = "epicrisis_{$internacion->id}_" . now()->format('Y-m-d_His') . ".pdf";
+                $rutaArchivo = storage_path("app/public/reportes/{$nombreArchivo}");
+
+                if (!file_exists(storage_path('app/public/reportes'))) {
+                    mkdir(storage_path('app/public/reportes'), 0755, true);
+                }
+
+                file_put_contents($rutaArchivo, $pdf->output());
+
+                Log::info('Epicrisis generada automáticamente', [
+                    'internacion_id' => $internacion->id,
+                    'archivo' => $nombreArchivo
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error al generar epicrisis automática', [
+                    'error' => $e->getMessage(),
+                    'internacion_id' => $internacion->id
+                ]);
+            }
         } catch (\Throwable $e) {
             Log::error('Error al dar de alta', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error interno al procesar el alta.'], 500);
         }
 
-        return response()->json(['message' => 'Paciente dado de alta exitosamente.']);
+        return response()->json([
+            'message' => 'Paciente dado de alta exitosamente.',
+            'epicrisis_generada' => true
+        ]);
     }
 
     // ------------------------------------------------------------------------

@@ -27,7 +27,8 @@ use App\Http\Controllers\{
     TipoDietaController,
     AlimentacionController,
     ConsumeController,
-    NotificacionController
+    NotificacionController,
+    ReporteController
 };
 
 // ---------------------------
@@ -57,8 +58,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('internaciones')->group(function () {
         Route::get('{internacion}/vista-completa', [InternacionController::class, 'getVistaCompleta']);
         Route::post('{internacion}/dar-de-alta', [InternacionController::class, 'darDeAlta']);
+        Route::put('{internacion}/alta', [InternacionController::class, 'darDeAlta']);
         Route::get('{id}/dashboard', [InternacionController::class, 'getDashboardData']);
     });
+
     Route::get('/mis-pacientes', [InternacionController::class, 'getMisPacientes']);
     Route::get('/estacion-enfermeria/pacientes', [InternacionController::class, 'getPacientesParaEnfermeria']);
 
@@ -71,7 +74,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- ALIMENTACIÓN ---
     Route::post('/alimentaciones/{alimentacion}/suspender', [AlimentacionController::class, 'suspender']);
     Route::get('/alimentaciones/internacion/{internacionId}', [AlimentacionController::class, 'porInternacion']);
+    // Epicrisis (Informe de Alta)
+    Route::get('/reportes/epicrisis/{internacionId}', [ReporteController::class, 'generarEpicrisis']);
 
+    // Reporte de Evolución Clínica
+    Route::get('/reportes/evolucion-clinica/{internacionId}', [ReporteController::class, 'generarEvolucionClinica']);
+
+    // Reportes Estadísticos
+    Route::post('/reportes/estadisticas', [ReporteController::class, 'generarEstadisticas']);
     // --- CONSUMOS ---
 
     // RUTA CORREGIDA (sin /fecha/)
