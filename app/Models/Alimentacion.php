@@ -8,29 +8,59 @@ use Illuminate\Database\Eloquent\Model;
 class Alimentacion extends Model
 {
     use HasFactory;
+
     protected $table = 'alimentacions';
 
     protected $fillable = [
         'internacion_id',
         'tipo_dieta_id',
-        'frecuencia',
+        'via_administracion',
+        'frecuencia_tiempos',
+        'restricciones',
+        'descripcion',
         'fecha_inicio',
         'fecha_fin',
-        'descripcion',
-        'estado', // <-- AÑADIR
-        'motivo_suspension', // <-- AÑADIR
+        'estado',
+        'motivo_suspension',
     ];
 
+    protected $casts = [
+        'frecuencia_tiempos' => 'integer',
+        'fecha_inicio' => 'datetime',
+        'fecha_fin' => 'datetime',
+    ];
 
-    // ... tus relaciones aquí ...
+    public function internacion()
+    {
+        return $this->belongsTo(Internacion::class);
+    }
+
     public function tipoDieta()
     {
         return $this->belongsTo(TipoDieta::class, 'tipo_dieta_id');
     }
 
-    // Es buena idea añadir también la relación inversa
-    public function internacion()
+    public function consumes()
     {
-        return $this->belongsTo(Internacion::class);
+        return $this->hasMany(Consume::class);
+    }
+
+    // <CHANGE> Agregar relación con tiempos
+    public function tiempos()
+    {
+        return $this->hasMany(AlimentacionTiempo::class)->orderBy('orden');
+    }
+
+    public function scopeActivas($query)
+    {
+        return $query->where('estado', 0);
+    }
+
+    public function suspender($motivo)
+    {
+        $this->update([
+            'estado' => 1,
+            'motivo_suspension' => $motivo,
+        ]);
     }
 }

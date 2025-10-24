@@ -66,8 +66,23 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- SEGUIMIENTO ---
     Route::get('/seguimiento/tratamiento/{id}', [SeguimientoController::class, 'getEstadoTratamiento']);
-    Route::post('/alimentaciones/{alimentacion}/suspender', [AlimentacionController::class, 'suspender']);
 
+    // --- ALIMENTACIÓN ---
+    Route::post('/alimentaciones/{alimentacion}/suspender', [AlimentacionController::class, 'suspender']);
+    Route::get('/alimentaciones/internacion/{internacionId}', [AlimentacionController::class, 'porInternacion']);
+
+    // --- CONSUMOS ---
+
+    // RUTA CORREGIDA (sin /fecha/)
+    Route::get('/consumos/alimentacion/{alimentacionId}/{fecha}', [ConsumeController::class, 'porAlimentacionYFecha']);
+
+    // RUTA AÑADIDA (para guardar individualmente)
+    Route::post('/consumos/registrar-tiempo', [ConsumeController::class, 'registrarTiempoUnico']);
+
+    // Esta ruta la puedes dejar por si la usas en otro lado
+    Route::post('/consumos/registrar-dia', [ConsumeController::class, 'registrarDia']);
+
+    // ... (resto de tus rutas)
     // --- CRONOGRAMA ---
     Route::post('/cronograma/generar/{receta}', [AdministraController::class, 'generarCronograma']);
 

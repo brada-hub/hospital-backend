@@ -75,7 +75,7 @@ class AdmisionController extends Controller
 
                 // --- Parte 2: Guardar Signos Vitales Iniciales ---
                 if (!empty($signosVitalesData)) {
-                    $control = $internacion->controls()->create([
+                    $control = $internacion->controles()->create([
                         'user_id'       => Auth::id(),
                         'fecha_control' => Carbon::now(),
                         'tipo'          => 'Control de Ingreso',

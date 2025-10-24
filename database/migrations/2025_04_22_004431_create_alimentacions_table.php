@@ -10,17 +10,23 @@ return new class extends Migration
     {
         Schema::create('alimentacions', function (Blueprint $table) {
             $table->id();
-
-            // --- AÑADE ESTA LÍNEA ---
-            // Esto crea la columna 'internacion_id' y la enlaza con la tabla 'internacions'
             $table->foreignId('internacion_id')->constrained('internacions')->onDelete('cascade');
-
             $table->foreignId('tipo_dieta_id')->constrained('tipos_dieta');
-            $table->string('frecuencia');
+
+            $table->enum('via_administracion', ['Oral', 'Enteral', 'Parenteral'])->default('Oral');
+
+            $table->unsignedTinyInteger('frecuencia_tiempos'); // 1, 2, 3, 4, o 5
+
+            // Ejemplo: [{"tiempo": "Desayuno", "descripcion": "Papilla de avena"}, ...]
+
+
+
+            $table->text('restricciones')->nullable(); // Ej: "Sin azúcares añadidos, sin frituras"
+            $table->text('descripcion'); // Observaciones médicas
+
             $table->dateTime('fecha_inicio');
             $table->dateTime('fecha_fin');
-            $table->string('descripcion');
-            $table->tinyInteger('estado')->default(0);
+            $table->tinyInteger('estado')->default(0); // 0=Activo, 1=Suspendido, 2=Finalizado
             $table->text('motivo_suspension')->nullable();
             $table->timestamps();
         });

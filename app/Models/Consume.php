@@ -8,14 +8,21 @@ use Illuminate\Database\Eloquent\Model;
 class Consume extends Model
 {
     use HasFactory;
-    protected $table = 'consumes'; // Se mantiene tu nombre original
+
+    protected $table = 'consumes';
 
     protected $fillable = [
         'tratamiento_id',
         'alimentacion_id',
-        'observaciones',
+        'tiempo_comida',
         'fecha',
-        'porcentaje_consumido', // CAMBIO
+        'porcentaje_consumido',
+        'observaciones',
+        'registrado_por',
+    ];
+
+    protected $casts = [
+        'fecha' => 'date',
     ];
 
     public function tratamiento()
@@ -26,5 +33,10 @@ class Consume extends Model
     public function alimentacion()
     {
         return $this->belongsTo(Alimentacion::class);
+    }
+
+    public function registradoPor()
+    {
+        return $this->belongsTo(User::class, 'registrado_por');
     }
 }

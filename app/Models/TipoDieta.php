@@ -8,8 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class TipoDieta extends Model
 {
     use HasFactory;
+
     protected $table = 'tipos_dieta';
-    protected $fillable = ['nombre', 'descripcion'];
+
+    protected $fillable = [
+        'nombre',
+        'descripcion'
+    ];
 
     public function alimentaciones()
     {

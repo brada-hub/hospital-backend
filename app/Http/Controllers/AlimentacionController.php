@@ -8,101 +8,134 @@ use Illuminate\Support\Facades\Log;
 
 class AlimentacionController extends Controller
 {
-    /**
-     * Muestra una lista de todos los planes de alimentación.
-     */
-    public function index()
-    {
-        // Carga los planes junto con su tipo de dieta asociado
-        return Alimentacion::with('tipoDieta')->latest()->get();
-    }
-
-    /**
-     * Guarda un nuevo plan de alimentación en la base de datos.
-     */
     public function store(Request $request)
     {
         $data = $request->validate([
             'internacion_id' => 'required|exists:internacions,id',
-            'tipo_dieta_id'  => 'required|exists:tipos_dieta,id',
-            'frecuencia'     => 'required|string|max:100',
-            'fecha_inicio'   => 'required|date',
-            'fecha_fin'      => 'required|date|after_or_equal:fecha_inicio',
-            'descripcion'    => 'required|string|max:255',
-        ]);
-        $dietaActivaExistente = Alimentacion::where('internacion_id', $data['internacion_id'])
-            ->where('estado', 0) // 0 = Activo
-            ->exists();
-        if ($dietaActivaExistente) {
-            // Error 409 Conflict: La solicitud no se pudo completar debido a un conflicto
-            return response()->json([
-                'message' => 'Ya existe un plan de alimentación activo para este paciente. Suspenda el actual antes de crear uno nuevo.'
-            ], 409);
-        }
-
-        // Si pasamos la validación, creamos la dieta (por defecto el estado es 0)
-        $alimentacion = Alimentacion::create($data);
-        // ... Log y resto del código ...
-        return response()->json($alimentacion->load('tipoDieta'), 201);
-    }
-
-    public function suspender(Request $request, Alimentacion $alimentacion)
-    {
-        $data = $request->validate([
-            'motivo' => 'required|string|min:10',
+            'tipo_dieta_id' => 'required|exists:tipos_dieta,id',
+            'via_administracion' => 'required|in:Oral,Enteral,Parenteral',
+            'frecuencia_tiempos' => 'required|integer|min:1|max:5',
+            'tiempos' => 'required|array|min:1',
+            'tiempos.*.tiempo_comida' => 'required|in:Desayuno,Merienda AM,Almuerzo,Merienda PM,Cena',
+            'tiempos.*.descripcion' => 'nullable|string',
+            'restricciones' => 'nullable|string',
+            'descripcion' => 'nullable|string',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after:fecha_inicio',
         ]);
 
-        if ($alimentacion->estado !== 0) {
-            return response()->json(['message' => 'Este plan ya no está activo.'], 400);
+        $alimentacion = Alimentacion::create([
+            'internacion_id' => $data['internacion_id'],
+            'tipo_dieta_id' => $data['tipo_dieta_id'],
+            'via_administracion' => $data['via_administracion'],
+            'frecuencia_tiempos' => $data['frecuencia_tiempos'],
+            'restricciones' => $data['restricciones'],
+            'descripcion' => $data['descripcion'],
+            'fecha_inicio' => $data['fecha_inicio'],
+            'fecha_fin' => $data['fecha_fin'],
+            'estado' => 0,
+        ]);
+
+        foreach ($data['tiempos'] as $index => $tiempo) {
+            $alimentacion->tiempos()->create([
+                'tiempo_comida' => $tiempo['tiempo_comida'],
+                'descripcion' => $tiempo['descripcion'] ?? null,
+                'orden' => $index + 1,
+            ]);
         }
 
-        $alimentacion->estado = 1; // 1 = Suspendido
-        $alimentacion->motivo_suspension = $data['motivo'];
-        $alimentacion->save();
-
-        Log::info('Plan de alimentación suspendido', ['id' => $alimentacion->id, 'motivo' => $data['motivo']]);
-
-        return response()->json($alimentacion->load('tipoDieta'), 200);
+        return response()->json($alimentacion->load('tiempos'), 201);
     }
 
-    /**
-     * Muestra un plan de alimentación específico.
-     */
-    public function show(Alimentacion $alimentacion)
+    public function index()
     {
-        // Carga la relación 'tipoDieta' antes de devolver la respuesta
-        return response()->json($alimentacion->load('tipoDieta'));
+        $alimentaciones = Alimentacion::with(['internacion', 'tipoDieta', 'tiempos'])
+            ->get();
+        return response()->json($alimentaciones);
     }
 
-    /**
-     * Actualiza un plan de alimentación existente.
-     */
-    public function update(Request $request, Alimentacion $alimentacion)
+    public function show($id)
     {
+        return response()->json(
+            Alimentacion::with(['internacion', 'tipoDieta', 'tiempos', 'consumes.registradoPor'])
+                ->findOrFail($id)
+        );
+    }
+
+    // <CHANGE> Corregir método update para manejar tiempos correctamente
+    public function update(Request $request, $id)
+    {
+        $alimentacion = Alimentacion::findOrFail($id);
+
         $data = $request->validate([
             'internacion_id' => 'required|exists:internacions,id',
-            'tipo_dieta_id'  => 'required|exists:tipos_dieta,id',
-            'frecuencia'     => 'required|string|max:100',
-            'fecha_inicio'   => 'required|date',
-            'fecha_fin'      => 'required|date|after_or_equal:fecha_inicio',
-            'descripcion'    => 'required|string|max:255',
+            'tipo_dieta_id' => 'required|exists:tipos_dieta,id',
+            'via_administracion' => 'required|in:Oral,Enteral,Parenteral',
+            'frecuencia_tiempos' => 'required|integer|min:1|max:5',
+            'tiempos' => 'required|array|min:1',
+            'tiempos.*.tiempo_comida' => 'required|in:Desayuno,Merienda AM,Almuerzo,Merienda PM,Cena',
+            'tiempos.*.descripcion' => 'nullable|string',
+            'restricciones' => 'nullable|string',
+            'descripcion' => 'nullable|string',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after:fecha_inicio',
         ]);
 
-        $alimentacion->update($data);
-        Log::info('Plan de alimentación actualizado', ['id' => $alimentacion->id]);
+        $alimentacion->update([
+            'internacion_id' => $data['internacion_id'],
+            'tipo_dieta_id' => $data['tipo_dieta_id'],
+            'via_administracion' => $data['via_administracion'],
+            'frecuencia_tiempos' => $data['frecuencia_tiempos'],
+            'restricciones' => $data['restricciones'],
+            'descripcion' => $data['descripcion'],
+            'fecha_inicio' => $data['fecha_inicio'],
+            'fecha_fin' => $data['fecha_fin'],
+        ]);
 
-        return response()->json($alimentacion->load('tipoDieta'), 200);
+        // Eliminar tiempos existentes y crear nuevos
+        $alimentacion->tiempos()->delete();
+
+        foreach ($data['tiempos'] as $index => $tiempo) {
+            $alimentacion->tiempos()->create([
+                'tiempo_comida' => $tiempo['tiempo_comida'],
+                'descripcion' => $tiempo['descripcion'] ?? null,
+                'orden' => $index + 1,
+            ]);
+        }
+
+        Log::info('Alimentación actualizada', ['id' => $alimentacion->id]);
+
+        return response()->json($alimentacion->load(['internacion', 'tipoDieta', 'tiempos']));
     }
 
-    /**
-     * Elimina un plan de alimentación.
-     */
-    public function destroy(Alimentacion $alimentacion)
+    public function destroy($id)
     {
-        $alimentacion->delete();
-        Log::warning('Plan de alimentación eliminado', ['id' => $alimentacion->id]);
-
-        // Devuelve una respuesta vacía con código 204 (No Content)
+        Alimentacion::findOrFail($id)->delete();
+        Log::warning('Alimentación eliminada', ['id' => $id]);
         return response()->noContent();
+    }
+
+    public function suspender(Request $request, $id)
+    {
+        $alimentacion = Alimentacion::findOrFail($id);
+
+        $data = $request->validate([
+            'motivo_suspension' => 'required|string',
+        ]);
+
+        $alimentacion->suspender($data['motivo_suspension']);
+        Log::info('Alimentación suspendida', ['id' => $alimentacion->id]);
+
+        return response()->json($alimentacion);
+    }
+
+    public function porInternacion($internacionId)
+    {
+        return response()->json(
+            Alimentacion::with(['tipoDieta', 'tiempos', 'consumes'])
+                ->where('internacion_id', $internacionId)
+                ->activas()
+                ->get()
+        );
     }
 }
