@@ -18,7 +18,7 @@ class ReporteController extends Controller
         $internacion = Internacion::with([
             'paciente',
             'medico',
-            'ocupacionActiva.cama.sala',
+            'ocupacionActiva.cama.sala.especialidad',
             'tratamientos.recetas.medicamento',
             'tratamientos.recetas.administras',
             'alimentaciones.tipoDieta',

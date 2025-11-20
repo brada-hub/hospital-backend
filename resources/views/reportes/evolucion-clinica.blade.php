@@ -18,9 +18,9 @@
         .footer { margin-top: 20px; text-align: center; font-size: 8pt; color: #7f8c8d; border-top: 1px solid #bdc3c7; padding-top: 8px; }
     </style>
 </head>
-<body>
+<body>ss
     <div class="header">
-        <h1>📊 EVOLUCIÓN CLÍNICA COMPLETA</h1>
+        <h1>EVOLUCIÓN CLÍNICA COMPLETA</h1>
         <p>Paciente: {{ $internacion->paciente->nombre }} {{ $internacion->paciente->apellidos }} (CI: {{ $internacion->paciente->ci }})</p>
         <p>Médico: Dr(a). {{ $internacion->medico->nombre }} {{ $internacion->medico->apellidos }}</p>
         <p>Generado: {{ $fechaGeneracion }}</p>
@@ -28,12 +28,12 @@
 
     @foreach($controlesPorFecha as $fecha => $controles)
         <div class="section">
-            <div class="section-title">📅 {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y') }}</div>
+            <div class="section-title">{{ \Carbon\Carbon::parse($fecha)->format('d/m/Y') }}</div>
 
             @foreach($controles as $control)
                 <div class="control-card">
                     <div class="control-header">
-                        🕐 {{ \Carbon\Carbon::parse($control->fecha_control)->format('H:i') }} -
+                        {{ \Carbon\Carbon::parse($control->fecha_control)->format('H:i') }} -
                         {{ $control->tipo }}
                         ({{ $control->user->nombre }} {{ $control->user->apellidos }})
                     </div>

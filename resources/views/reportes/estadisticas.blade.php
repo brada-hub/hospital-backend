@@ -23,7 +23,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>📈 ESTADÍSTICAS HOSPITALARIAS</h1>
+        <h1>ESTADÍSTICAS HOSPITALARIAS</h1>
         <p>Período: {{ $periodo['inicio'] }} - {{ $periodo['fin'] }}</p>
         <p>Generado: {{ $fecha_generacion }}</p>
     </div>
@@ -52,7 +52,7 @@
 
     <!-- MEDICAMENTOS MÁS USADOS -->
     <div class="section">
-        <div class="section-title">💊 TOP 10 MEDICAMENTOS MÁS PRESCRITOS</div>
+        <div class="section-title">TOP 10 MEDICAMENTOS MÁS PRESCRITOS</div>
         <table>
             <thead>
                 <tr>
@@ -75,7 +75,7 @@
 
     <!-- DIAGNÓSTICOS FRECUENTES -->
     <div class="section">
-        <div class="section-title">🩺 DIAGNÓSTICOS MÁS FRECUENTES</div>
+        <div class="section-title">DIAGNÓSTICOS MÁS FRECUENTES</div>
         <table>
             <thead>
                 <tr>
@@ -98,7 +98,7 @@
 
     <!-- OCUPACIÓN DE SALAS -->
     <div class="section">
-        <div class="section-title">🏥 OCUPACIÓN POR SALA</div>
+        <div class="section-title">OCUPACIÓN POR SALA</div>
         <table>
             <thead>
                 <tr>
@@ -119,7 +119,7 @@
 
     <!-- EFECTIVIDAD DE TRATAMIENTOS -->
     <div class="section">
-        <div class="section-title">✅ ESTADO DE TRATAMIENTOS</div>
+        <div class="section-title">ESTADO DE TRATAMIENTOS</div>
         <table>
             <thead>
                 <tr>
@@ -129,15 +129,15 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>✅ Finalizados</td>
+                    <td>Finalizados</td>
                     <td>{{ $efectividad_tratamientos['finalizados'] }}</td>
                 </tr>
                 <tr>
-                    <td>⏸️ Suspendidos</td>
+                    <td>⏸Suspendidos</td>
                     <td>{{ $efectividad_tratamientos['suspendidos'] }}</td>
                 </tr>
                 <tr>
-                    <td>🔄 Activos</td>
+                    <td>Activos</td>
                     <td>{{ $efectividad_tratamientos['activos'] }}</td>
                 </tr>
             </tbody>

@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * @property-read \App\Models\User|null $user
+ * @property-read \App\Models\Internacion|null $internacionActiva
+ */
 class Paciente extends Model
 {
     use HasFactory;
@@ -20,17 +24,29 @@ class Paciente extends Model
         'genero',
         'telefono',
         'direccion',
+        'nombre_referencia',
+        'apellidos_referencia',
+        'celular_referencia',
+        'user_id',
         'estado'
     ];
+
     protected $casts = [
         'estado' => 'boolean',
     ];
-     public function internacionActiva()
+
+    public function internacionActiva()
     {
         return $this->hasOne(Internacion::class)
-                    ->whereNull('fecha_alta')
-                    ->latest('fecha_ingreso');
+            ->whereNull('fecha_alta')
+            ->latest('fecha_ingreso');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     protected static function booted()
     {
         static::created(fn($p) => Log::info('Paciente creado', $p->toArray()));

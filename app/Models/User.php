@@ -50,7 +50,10 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Permission::class, 'user_permissions')->withPivot('estado');
     }
-
+    public function paciente()
+    {
+        return $this->hasOne(Paciente::class);
+    }
     public function hasPermission(string $permission)
     {
         // 1. Verificar si el permiso está explícitamente negado para este usuario

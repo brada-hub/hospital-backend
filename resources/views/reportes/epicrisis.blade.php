@@ -77,8 +77,12 @@
                 <div class="info-value">Dr(a). {{ $internacion->medico->nombre }} {{ $internacion->medico->apellidos }}</div>
             </div>
             <div class="info-row">
+                <div class="info-label">Especialidad:</div>
+                <div class="info-value">{{ $internacion->ocupacionActiva->cama->sala->especialidad->nombre ?? 'N/A' }}</div>
+            </div>
+            <div class="info-row">
                 <div class="info-label">Sala/Cama:</div>
-                <div class="info-value">{{ $internacion->ocupacionActiva->cama->sala->nombre ?? 'N/A' }} - Cama {{ $internacion->ocupacionActiva->cama->numero ?? 'N/A' }}</div>
+                <div class="info-value">{{ $internacion->ocupacionActiva->cama->sala->nombre ?? 'N/A' }} - Cama {{ $internacion->ocupacionActiva->cama->nombre ?? 'N/A' }}</div>
             </div>
         </div>
     </div>

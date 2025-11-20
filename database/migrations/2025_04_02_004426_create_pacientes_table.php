@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('pacientes', function (Blueprint $table) {
@@ -20,16 +17,20 @@ return new class extends Migration
             $table->string('genero');
             $table->integer('telefono');
             $table->string('direccion');
-            // CAMBIADO: Se usa boolean() en lugar de string().
-            // Por defecto, todos los pacientes nuevos serán 'activos' (1).
+
+            // ✅ NUEVOS CAMPOS: Contacto de referencia
+            $table->string('nombre_referencia')->nullable();
+            $table->string('apellidos_referencia')->nullable();
+            $table->string('celular_referencia')->nullable();
+
+            // Usuario asociado (se creará automáticamente)
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+
             $table->boolean('estado')->default(1);
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('pacientes');
