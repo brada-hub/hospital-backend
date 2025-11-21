@@ -189,7 +189,7 @@ class DatabaseSeeder extends Seeder
             SignoSeeder::class,
             TipoDietaSeeder::class,
         ]);
-        $this->call(InternacionCompletaSeeder::class);
+        $this->call(HospitalCompletoSeeder::class);
         $this->call(RangosNormalesSeeder::class);
     }
 }

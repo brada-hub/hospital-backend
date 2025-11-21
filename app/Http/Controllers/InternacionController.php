@@ -163,7 +163,18 @@ class InternacionController extends Controller
                         ->with(['user.rol', 'valores.signo']);
                 },
                 'cuidados.cuidadosAplicados.user:id,nombre,apellidos',
-                'alimentaciones.tipoDieta'
+                // ✅ CARGAR ALIMENTACIONES CON TIEMPOS Y CONSUMOS
+                'alimentaciones' => function ($q) {
+                    $q->where('estado', 0)->with([
+                        'tipoDieta:id,nombre',
+                        'tiempos',  // ✅ ESTO ES LO QUE FALTABA!
+                        'consumes' => function ($q_consumo) {
+                            $q_consumo->whereDate('fecha', Carbon::today())
+                                ->with('registradoPor:id,nombre,apellidos')
+                                ->latest('created_at');
+                        }
+                    ])->latest('fecha_inicio');
+                }
             ])
             ->latest('fecha_ingreso')
             ->get();
