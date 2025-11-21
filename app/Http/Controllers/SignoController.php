@@ -10,15 +10,28 @@ class SignoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Signo::query();
+        $query = Signo::with('rangoNormal');
 
-        // LÓGICA CLAVE: Si se pide 'rutinario', solo devuelve aquellos marcados como true
         if ($request->query('tipo') === 'rutinario') {
             $query->where('es_rutinario', true);
         }
 
-        return response()->json($query->orderBy('nombre')->get());
+        $signos = $query->orderBy('nombre')->get();
+
+        return response()->json(
+            $signos->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'nombre' => $s->nombre,
+                    'unidad' => $s->unidad,
+                    'es_rutinario' => $s->es_rutinario,
+                    'rango_minimo' => $s->rangoNormal->valor_minimo ?? null,
+                    'rango_maximo' => $s->rangoNormal->valor_maximo ?? null,
+                ];
+            })
+        );
     }
+
     public function store(Request $request)
     {
         $data = $request->validate([

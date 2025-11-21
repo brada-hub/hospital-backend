@@ -25,4 +25,8 @@ class Signo extends Model
         static::updated(fn($s) => Log::info('Signo actualizado', $s->toArray()));
         static::deleted(fn($s) => Log::info('Signo eliminado', $s->toArray()));
     }
+    public function rangoNormal()
+    {
+        return $this->hasOne(RangoNormal::class);
+    }
 }

@@ -51,6 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- ADMISIONES ---
     Route::get('/camas-disponibles', [CamaController::class, 'getDisponibles']);
     Route::get('/pacientes/buscar', [PacienteController::class, 'buscar']);
+    Route::get('/pacientes/todos', [PacienteController::class, 'todos']);
     Route::get('/medicos-activos', [UserController::class, 'getMedicosActivos']);
     Route::post('/admisiones', [AdmisionController::class, 'store']);
 

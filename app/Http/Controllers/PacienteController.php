@@ -89,19 +89,59 @@ class PacienteController extends Controller
         }
     }
 
+    /**
+     * ✅ NUEVO: Obtener todos los pacientes sin filtro (para el select inicial)
+     * Excluye pacientes que ya tienen internación activa
+     */
+    public function todos()
+    {
+        $pacientes = Paciente::where('estado', true)
+            ->whereDoesntHave('internacionActiva')
+            ->select('id', 'ci', 'nombre', 'apellidos', 'telefono')
+            ->orderBy('nombre')
+            ->orderBy('apellidos')
+            ->get();
+
+        return response()->json($pacientes);
+    }
+
+    /**
+     * Buscar pacientes por término (requiere mínimo 2 caracteres)
+     * Excluye pacientes que ya tienen internación activa
+     */
     public function buscar(Request $request)
     {
-        $request->validate(['termino' => 'required|string|min:2']);
-        $termino = $request->termino;
+        // ✅ MEJORADO: Hacer el parámetro opcional
+        $request->validate([
+            'termino' => 'nullable|string|min:2'
+        ]);
 
-        $pacientes = Paciente::where(function ($query) use ($termino) {
-            $query->where('ci', 'LIKE', "%{$termino}%")
-                ->orWhere('nombre', 'LIKE', "%{$termino}%")
-                ->orWhere('apellidos', 'LIKE', "%{$termino}%")
-                ->orWhere('telefono', 'LIKE', "%{$termino}%");
-        })
-            ->take(10)
-            ->get();
+        $termino = $request->input('termino');
+
+        // Query base: solo pacientes activos sin internación activa
+        $query = Paciente::where('estado', true)
+            ->whereDoesntHave('internacionActiva')
+            ->select('id', 'ci', 'nombre', 'apellidos', 'telefono');
+
+        // Si no hay término, devolver todos los pacientes disponibles
+        if (empty($termino)) {
+            $pacientes = $query->orderBy('nombre')
+                ->orderBy('apellidos')
+                ->take(50)
+                ->get();
+        } else {
+            // Si hay término, filtrar
+            $pacientes = $query->where(function ($q) use ($termino) {
+                $q->where('ci', 'LIKE', "%{$termino}%")
+                    ->orWhere('nombre', 'LIKE', "%{$termino}%")
+                    ->orWhere('apellidos', 'LIKE', "%{$termino}%")
+                    ->orWhere('telefono', 'LIKE', "%{$termino}%");
+            })
+                ->orderBy('nombre')
+                ->orderBy('apellidos')
+                ->take(20)
+                ->get();
+        }
 
         return response()->json($pacientes);
     }
@@ -204,7 +244,6 @@ class PacienteController extends Controller
                             }
                         ]);
                 },
-                // 👇 AGREGAR ESTA LÍNEA - Carga los cuidados con sus aplicaciones y usuario
                 'cuidados' => function ($query) {
                     $query->with([
                         'cuidadosAplicados' => function ($q) {
