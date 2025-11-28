@@ -17,7 +17,13 @@ class Signo extends Model
         'nombre',
         'unidad',
         'es_rutinario',
+        'requiere_valores_duales',
     ];
+
+    public function requiereValoresDuales(): bool
+    {
+        return $this->requiere_valores_duales ?? false;
+    }
 
     protected static function booted()
     {

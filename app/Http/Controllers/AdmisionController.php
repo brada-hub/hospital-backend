@@ -29,9 +29,10 @@ class AdmisionController extends Controller
             'admision.observaciones' => 'nullable|string|max:191',
 
             // --- Signos Vitales Iniciales ---
-            'signos_vitales'             => 'present|array',
-            'signos_vitales.*.signo_id'  => 'required_with:signos_vitales|exists:signos,id',
-            'signos_vitales.*.medida'    => 'required_with:signos_vitales|string|max:50',
+            'signos_vitales'                => 'present|array',
+            'signos_vitales.*.signo_id'     => 'required_with:signos_vitales|exists:signos,id',
+            'signos_vitales.*.medida'       => 'required_with:signos_vitales|string|max:50',
+            'signos_vitales.*.medida_baja'  => 'nullable|string|max:50',
 
             // --- Plan de Cuidados Inicial ---
             'cuidados'                   => 'present|array',

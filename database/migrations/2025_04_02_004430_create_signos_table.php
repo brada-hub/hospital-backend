@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('unidad');
             $table->boolean('es_rutinario')->default(true);
+            $table->boolean('requiere_valores_duales')->default(false);
             $table->timestamps();
         });
     }

@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('control_id')->constrained('controls')->onDelete('cascade');
             $table->foreignId('signo_id')->constrained('signos')->onDelete('cascade');
-            $table->double('medida');
+            $table->string('medida', 50);
+            $table->string('medida_baja', 50)->nullable();
             $table->timestamps();
         });
     }
