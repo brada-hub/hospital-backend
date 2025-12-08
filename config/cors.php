@@ -26,8 +26,9 @@ return [
         'http://192.168.0.29:3000',
         'http://192.168.0.29:8080', // Para build de producción
         'http://localhost:3000',
-        'http://localhost:8080', // Para build de producción local
+        'http://localhost:8080',
         'http://127.0.0.1:3000',
+        'https://hospital-frontend-taupe.vercel.app', // Vercel Production
     ],
 
 
