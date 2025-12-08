@@ -28,8 +28,11 @@ return [
         'http://localhost:3000',
         'http://localhost:8080',
         'http://127.0.0.1:3000',
-        'https://hospital-frontend-taupe.vercel.app', // Vercel Production
+        'https://hospital-frontend-taupe.vercel.app',
+        'https://hospital-frontend-dtj180a2u.vercel.app', // URL específica actual
     ],
+
+    'allowed_origins_patterns' => ['*.vercel.app'], // ✅ Permitir cualquier despliegue de Vercel
 
 
     /*
