@@ -24,16 +24,20 @@ return [
     'allowed_origins' => [
         'http://192.168.0.29',
         'http://192.168.0.29:3000',
-        'http://192.168.0.29:8080', // Para build de producción
+        'http://192.168.0.29:8080',
         'http://localhost:3000',
         'http://localhost:8080',
         'http://127.0.0.1:3000',
+        // ORÍGENES DE CAPACITOR/MOVIL
+        'http://localhost',
+        'capacitor://localhost',
+        'ionic://localhost',
+        // WEB
         'https://hospital-frontend-taupe.vercel.app',
-        'https://hospital-frontend-dtj180a2u.vercel.app', // URL específica actual
+        'https://hospital-frontend-dtj180a2u.vercel.app',
     ],
 
-    'allowed_origins_patterns' => ['*.vercel.app'], // ✅ Permitir cualquier despliegue de Vercel
-
+    'allowed_origins_patterns' => ['*.vercel.app'],
 
     /*
     |--------------------------------------------------------------------------
