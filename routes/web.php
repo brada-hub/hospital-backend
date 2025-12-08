@@ -22,4 +22,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// --- RUTA TEMPORAL PARA SEEDER (Public) ---
+Route::get('/seed-exec', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        return 'EXACTO: Base de datos poblada correctamente (Seed ejecutado).';
+    } catch (\Exception $e) {
+        return 'ERROR: ' . $e->getMessage();
+    }
+});
+
 require __DIR__.'/auth.php';
