@@ -32,9 +32,8 @@ class Sala extends Model
     protected function nombre(): Attribute
     {
         return Attribute::make(
-            // CORREGIDO: Usamos funciones multibyte para manejar acentos
-            get: fn($value) => mb_convert_case(mb_strtolower($value, 'UTF-8'), MB_CASE_TITLE, 'UTF-8'),
-            set: fn($value) => strtoupper($value),
+            get: fn($value) => $value ? mb_convert_case(mb_strtolower($value, 'UTF-8'), MB_CASE_TITLE, 'UTF-8') : null,
+            set: fn($value) => $value ? strtoupper($value) : null,
         );
     }
 
@@ -44,9 +43,8 @@ class Sala extends Model
     protected function tipo(): Attribute
     {
         return Attribute::make(
-            // CORREGIDO: Usamos funciones multibyte para manejar acentos
-            get: fn($value) => mb_convert_case(mb_strtolower($value, 'UTF-8'), MB_CASE_TITLE, 'UTF-8'),
-            set: fn($value) => strtoupper($value),
+            get: fn($value) => $value ? mb_convert_case(mb_strtolower($value, 'UTF-8'), MB_CASE_TITLE, 'UTF-8') : null,
+            set: fn($value) => $value ? strtoupper($value) : null,
         );
     }
 
