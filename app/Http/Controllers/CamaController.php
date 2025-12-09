@@ -11,13 +11,28 @@ class CamaController extends Controller
 {
     public function index(Request $request)
     {
-        $hospitalId = $request->user()->hospital_id;
-        return Cama::with('sala.especialidad')
-            ->whereHas('sala.especialidad', function ($query) use ($hospitalId) {
-                $query->where('hospital_id', $hospitalId);
-            })
-            ->orderBy('nombre')
-            ->get();
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
+            $hospitalId = $user->hospital_id;
+
+            return Cama::with('sala.especialidad')
+                ->whereHas('sala.especialidad', function ($query) use ($hospitalId) {
+                    $query->where('hospital_id', $hospitalId);
+                })
+                ->orderBy('nombre')
+                ->get();
+        } catch (\Throwable $e) {
+            Log::error('Error en CamaController@index: ' . $e->getMessage());
+            return response()->json([
+                'error' => true,
+                'message' => 'Error interno al cargar camas: ' . $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
+        }
     }
 
     public function store(Request $request)
@@ -88,12 +103,22 @@ class CamaController extends Controller
 
     public function getDisponibles(Request $request)
     {
-        $request->validate(['sala_id' => 'nullable|integer|exists:salas,id']);
-        $query = Cama::query();
-        $query->where('estado', 1)->where('disponibilidad', 1);
-        if ($request->filled('sala_id')) {
-            $query->where('sala_id', $request->sala_id);
+        try {
+            $request->validate(['sala_id' => 'nullable|integer|exists:salas,id']);
+            $query = Cama::query();
+            $query->where('estado', 1)->where('disponibilidad', 1);
+            if ($request->filled('sala_id')) {
+                $query->where('sala_id', $request->sala_id);
+            }
+            return $query->with('sala')->get();
+        } catch (\Throwable $e) {
+            Log::error('Error en CamaController@getDisponibles: ' . $e->getMessage());
+            return response()->json([
+                'error' => true,
+                'message' => 'Error al obtener camas disponibles: ' . $e->getMessage(),
+                 'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
         }
-        return $query->with('sala')->get();
     }
 }
