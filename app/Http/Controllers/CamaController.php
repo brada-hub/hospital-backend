@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\controllers;
+namespace App\Http\Controllers;
 
 use App\Models\Cama;
 use Illuminate\Http\Request;
