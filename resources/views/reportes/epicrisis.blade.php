@@ -28,14 +28,14 @@
 </head>
 <body>
     <div class="header">
-        <h1>📋 EPICRISIS - INFORME DE ALTA MÉDICA</h1>
+        <h1>EPICRISIS - INFORME DE ALTA MÉDICA</h1>
         <p>Hospital: {{ $internacion->medico->hospital->nombre ?? 'N/A' }}</p>
         <p>Fecha de generación: {{ $fechaGeneracion }}</p>
     </div>
 
     <!-- DATOS DEL PACIENTE -->
     <div class="section">
-        <div class="section-title">👤 DATOS DEL PACIENTE</div>
+        <div class="section-title">DATOS DEL PACIENTE</div>
         <div class="info-grid">
             <div class="info-row">
                 <div class="info-label">Nombre Completo:</div>
@@ -58,7 +58,7 @@
 
     <!-- DATOS DE LA INTERNACIÓN -->
     <div class="section">
-        <div class="section-title">🏥 DATOS DE LA INTERNACIÓN</div>
+        <div class="section-title">DATOS DE LA INTERNACIÓN</div>
         <div class="info-grid">
             <div class="info-row">
                 <div class="info-label">Fecha de Ingreso:</div>
@@ -70,7 +70,7 @@
             </div>
             <div class="info-row">
                 <div class="info-label">Días de Estancia:</div>
-                <div class="info-value"><strong>{{ $diasEstancia }} días</strong></div>
+                <div class="info-value"><strong>{{ number_format($diasEstancia, 1) }} días</strong></div>
             </div>
             <div class="info-row">
                 <div class="info-label">Médico Tratante:</div>
@@ -89,7 +89,7 @@
 
     <!-- MOTIVO Y DIAGNÓSTICO -->
     <div class="section">
-        <div class="section-title">🩺 MOTIVO DE INGRESO Y DIAGNÓSTICO</div>
+        <div class="section-title">MOTIVO DE INGRESO Y DIAGNÓSTICO</div>
         <div class="info-grid">
             <div class="info-row">
                 <div class="info-label">Motivo de Ingreso:</div>
@@ -102,9 +102,48 @@
         </div>
     </div>
 
+    <!-- ANTROPOMETRÍA -->
+    <div class="section">
+        <div class="section-title">ANTROPOMETRÍA</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Medida</th>
+                    <th>Al Ingreso</th>
+                    <th>Al Egreso</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    $antropometriaKeys = ['Peso', 'Talla', 'Altura', 'IMC'];
+                    $signosAntro = collect($signosIngreso)->pluck('signo')->merge(collect($signosEgreso)->pluck('signo'))->unique()->filter(function($s) use ($antropometriaKeys) {
+                        return in_array($s, $antropometriaKeys);
+                    });
+                @endphp
+                @if($signosAntro->isEmpty())
+                    <tr><td colspan="3" style="text-align:center;">No se registraron datos antropométricos</td></tr>
+                @else
+                    @foreach($signosAntro as $nombreSigno)
+                        <tr>
+                            <td>{{ $nombreSigno }}</td>
+                            <td>
+                                @php $sIn = collect($signosIngreso)->firstWhere('signo', $nombreSigno); @endphp
+                                {{ $sIn ? $sIn['medida'] . ' ' . $sIn['unidad'] : 'N/R' }}
+                            </td>
+                            <td>
+                                @php $sOut = collect($signosEgreso)->firstWhere('signo', $nombreSigno); @endphp
+                                {{ $sOut ? $sOut['medida'] . ' ' . $sOut['unidad'] : 'N/R' }}
+                            </td>
+                        </tr>
+                    @endforeach
+                @endif
+            </tbody>
+        </table>
+    </div>
+
     <!-- SIGNOS VITALES -->
     <div class="section">
-        <div class="section-title">📊 SIGNOS VITALES</div>
+        <div class="section-title">SIGNOS VITALES</div>
         <table>
             <thead>
                 <tr>
@@ -118,6 +157,7 @@
                     $signosUnicos = collect($signosIngreso)->pluck('signo')->merge(collect($signosEgreso)->pluck('signo'))->unique();
                 @endphp
                 @foreach($signosUnicos as $nombreSigno)
+                    @if(in_array($nombreSigno, ['Peso', 'Talla', 'Altura', 'IMC'])) @continue @endif
                     <tr>
                         <td>{{ $nombreSigno }}</td>
                         <td>
@@ -140,7 +180,7 @@
 
     <!-- TRATAMIENTO FARMACOLÓGICO -->
     <div class="section">
-        <div class="section-title">💊 TRATAMIENTO FARMACOLÓGICO</div>
+        <div class="section-title">TRATAMIENTO FARMACOLÓGICO</div>
         @if(count($resumenMedicamentos) > 0)
             <table>
                 <thead>
@@ -176,7 +216,7 @@
 
     <!-- ALIMENTACIÓN -->
     <div class="section">
-        <div class="section-title">🍽️ PLAN DE ALIMENTACIÓN</div>
+        <div class="section-title">PLAN DE ALIMENTACIÓN</div>
         @if(count($resumenAlimentacion) > 0)
             <table>
                 <thead>
@@ -207,7 +247,7 @@
 
     <!-- EVOLUCIÓN CLÍNICA -->
     <div class="section">
-        <div class="section-title">📝 EVOLUCIÓN CLÍNICA</div>
+        <div class="section-title">EVOLUCIÓN CLÍNICA</div>
         @if($evolucionClinica->count() > 0)
             @foreach($evolucionClinica as $control)
                 <div style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #3498db;">
@@ -224,7 +264,7 @@
     <!-- OBSERVACIONES FINALES -->
     @if($internacion->observaciones)
         <div class="section">
-            <div class="section-title">📌 OBSERVACIONES FINALES</div>
+            <div class="section-title">OBSERVACIONES FINALES</div>
             <p style="padding: 10px; background-color: #fff3cd; border-left: 4px solid #ffc107;">
                 {{ $internacion->observaciones }}
             </p>
