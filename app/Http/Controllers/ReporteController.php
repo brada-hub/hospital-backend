@@ -18,7 +18,7 @@ class ReporteController extends Controller
         $internacion = Internacion::with([
             'paciente',
             'medico',
-            'ocupacionActiva.cama.sala.especialidad',
+            'ocupaciones.cama.sala.especialidad',
             'tratamientos.recetas.medicamento',
             'tratamientos.recetas.administras',
             'alimentaciones.tipoDieta',
@@ -57,6 +57,7 @@ class ReporteController extends Controller
 
         $data = [
             'internacion' => $internacion,
+            'ocupacion' => $internacion->ocupacionActiva ?? $internacion->ocupaciones->sortByDesc('created_at')->first(),
             'diasEstancia' => $diasEstancia,
             'signosIngreso' => $signosIngreso,
             'signosEgreso' => $signosEgreso,

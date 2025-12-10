@@ -11,13 +11,13 @@
         .header h1 { font-size: 18pt; color: #2c3e50; margin-bottom: 5px; }
         .header p { font-size: 10pt; color: #7f8c8d; }
         .section { margin-bottom: 20px; }
-        .section-title { background-color: #3498db; color: white; padding: 8px 12px; font-size: 12pt; font-weight: bold; margin-bottom: 10px; }
+        .section-title { background-color: #26a69a; color: white; padding: 8px 12px; font-size: 12pt; font-weight: bold; margin-bottom: 10px; }
         .info-grid { display: table; width: 100%; margin-bottom: 10px; }
         .info-row { display: table-row; }
         .info-label { display: table-cell; font-weight: bold; width: 30%; padding: 5px; background-color: #ecf0f1; }
         .info-value { display: table-cell; padding: 5px; border-bottom: 1px solid #bdc3c7; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        table th { background-color: #34495e; color: white; padding: 8px; text-align: left; font-size: 10pt; }
+        table th { background-color: #00897b; color: white; padding: 8px; text-align: left; font-size: 10pt; }
         table td { padding: 6px; border-bottom: 1px solid #ddd; font-size: 10pt; }
         .footer { margin-top: 30px; text-align: center; font-size: 9pt; color: #7f8c8d; border-top: 1px solid #bdc3c7; padding-top: 10px; }
         .badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 9pt; font-weight: bold; }
@@ -51,7 +51,7 @@
             </div>
             <div class="info-row">
                 <div class="info-label">Sexo:</div>
-                <div class="info-value">{{ $internacion->paciente->sexo }}</div>
+                <div class="info-value">{{ $internacion->paciente->genero }}</div>
             </div>
         </div>
     </div>
@@ -78,11 +78,11 @@
             </div>
             <div class="info-row">
                 <div class="info-label">Especialidad:</div>
-                <div class="info-value">{{ $internacion->ocupacionActiva->cama->sala->especialidad->nombre ?? 'N/A' }}</div>
+                <div class="info-value">{{ $ocupacion->cama->sala->especialidad->nombre ?? 'N/A' }}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Sala/Cama:</div>
-                <div class="info-value">{{ $internacion->ocupacionActiva->cama->sala->nombre ?? 'N/A' }} - Cama {{ $internacion->ocupacionActiva->cama->nombre ?? 'N/A' }}</div>
+                <div class="info-value">{{ $ocupacion->cama->sala->nombre ?? 'N/A' }} - Cama {{ $ocupacion->cama->nombre ?? 'N/A' }}</div>
             </div>
         </div>
     </div>
