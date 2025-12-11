@@ -67,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/mis-pacientes', [InternacionController::class, 'getMisPacientes']);
     Route::get('/estacion-enfermeria/pacientes', [InternacionController::class, 'getPacientesParaEnfermeria']);
+    Route::get('/internaciones/activas', [InternacionController::class, 'getInternacionesActivas']); // ✅ Para Nutricionista
 
     // --- CUIDADOS / ENFERMERÍA ---
     Route::post('/cuidados-directo', [CuidadoController::class, 'storeAplicadoDirecto']);
@@ -86,6 +87,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Reportes Estadísticos
     Route::post('/reportes/estadisticas', [ReporteController::class, 'generarEstadisticas']);
     // --- CONSUMOS ---
+
+    // RUTA OPTIMIZADA (Historial en una sola petición)
+    Route::get('/consumos/alimentacion/{alimentacionId}/historial', [ConsumeController::class, 'history']);
 
     // RUTA CORREGIDA (sin /fecha/)
     Route::get('/consumos/alimentacion/{alimentacionId}/{fecha}', [ConsumeController::class, 'porAlimentacionYFecha']);
@@ -146,6 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
         'recetas' => RecetaController::class,
         'administraciones' => AdministraController::class,
         'cuidados-aplicados' => CuidadoAplicadoController::class,
+        'cuidados' => CuidadoController::class,
         'permissions' => PermissionController::class,
         'medicamento-categorias' => MedicamentoCategoriaController::class,
         'tipos-dieta' => TipoDietaController::class,

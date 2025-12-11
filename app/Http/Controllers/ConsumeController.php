@@ -75,13 +75,28 @@ class ConsumeController extends Controller
         return response()->noContent();
     }
 
+    public function history($alimentacionId, Request $request)
+    {
+        // Default: últimos 7 días
+        $dias = $request->input('dias', 7);
+        $fechaInicio = now()->subDays($dias)->startOfDay();
+
+        return response()->json(
+            Consume::with(['registradoPor'])
+                ->where('alimentacion_id', $alimentacionId)
+                ->where('fecha', '>=', $fechaInicio)
+                ->orderBy('fecha', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get()
+        );
+    }
+
     public function porAlimentacionYFecha($alimentacionId, $fecha)
     {
         return response()->json(
             Consume::with(['registradoPor'])
                 ->where('alimentacion_id', $alimentacionId)
                 ->whereDate('fecha', $fecha)
-                // CAMBIO CLAVE: Ordenar por 'created_at' descendente
                 ->orderBy('created_at', 'desc')
                 ->get()
         );

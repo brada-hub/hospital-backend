@@ -131,10 +131,11 @@ class AlimentacionController extends Controller
 
     public function porInternacion($internacionId)
     {
+        // Devuelve TODAS las dietas (activas y suspendidas) para mostrar historial
         return response()->json(
             Alimentacion::with(['tipoDieta', 'tiempos', 'consumes'])
                 ->where('internacion_id', $internacionId)
-                ->activas()
+                ->orderByDesc('fecha_inicio')
                 ->get()
         );
     }

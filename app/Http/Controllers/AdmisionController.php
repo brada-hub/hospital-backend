@@ -110,6 +110,21 @@ class AdmisionController extends Controller
                     'leida' => false,
                 ]);
 
+                // --- Parte 5: Notificar a los Nutricionistas ---
+                $nutricionistas = \App\Models\User::whereHas('rol', function($q) {
+                    $q->where('nombre', 'NUTRICIONISTA');
+                })->get();
+                foreach ($nutricionistas as $nutricionista) {
+                    Notificacion::create([
+                        'user_id' => $nutricionista->id,
+                        'internacion_id' => $internacion->id,
+                        'tipo' => 'informacion',
+                        'titulo' => "Nuevo Paciente Internado",
+                        'mensaje' => "El paciente {$internacion->paciente->nombre} {$internacion->paciente->apellidos} ha ingresado y requiere asignación de plan nutricional.",
+                        'leida' => false,
+                    ]);
+                }
+
                 Log::info('Proceso de admisión registrado.', ['internacion_id' => $internacion->id, 'user_id' => Auth::id()]);
                 return $internacion;
             });

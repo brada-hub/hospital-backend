@@ -90,13 +90,11 @@ class HospitalCompletoSeeder extends Seeder
         $medicoRol = Rol::where('nombre', 'MÉDICO')->first();
         $enfermeraRol = Rol::where('nombre', 'ENFERMERA')->first();
 
-        // Crear 5 médicos adicionales
+        // Crear 3 médicos adicionales (para demo: 3 total)
         $nombresMedicos = [
             ['nombre' => 'Carlos', 'apellidos' => 'Rodríguez García', 'email' => 'carlos.rodriguez@hospital.com'],
             ['nombre' => 'Ana', 'apellidos' => 'Martínez López', 'email' => 'ana.martinez@hospital.com'],
             ['nombre' => 'Roberto', 'apellidos' => 'Fernández Silva', 'email' => 'roberto.fernandez@hospital.com'],
-            ['nombre' => 'Laura', 'apellidos' => 'González Morales', 'email' => 'laura.gonzalez@hospital.com'],
-            ['nombre' => 'Miguel', 'apellidos' => 'Sánchez Pérez', 'email' => 'miguel.sanchez@hospital.com'],
         ];
 
         foreach ($nombresMedicos as $index => $data) {
@@ -113,13 +111,11 @@ class HospitalCompletoSeeder extends Seeder
             );
         }
 
-        // Crear 5 enfermeras adicionales
+        // Crear 3 enfermeras (para demo: 3 total)
         $nombresEnfermeras = [
             ['nombre' => 'María', 'apellidos' => 'López Vargas', 'email' => 'maria.lopez@hospital.com'],
             ['nombre' => 'Carmen', 'apellidos' => 'Díaz Rojas', 'email' => 'carmen.diaz@hospital.com'],
             ['nombre' => 'Patricia', 'apellidos' => 'Ruiz Castro', 'email' => 'patricia.ruiz@hospital.com'],
-            ['nombre' => 'Isabel', 'apellidos' => 'Torres Mendoza', 'email' => 'isabel.torres@hospital.com'],
-            ['nombre' => 'Rosa', 'apellidos' => 'Ramírez Flores', 'email' => 'rosa.ramirez@hospital.com'],
         ];
 
         foreach ($nombresEnfermeras as $index => $data) {
@@ -139,40 +135,34 @@ class HospitalCompletoSeeder extends Seeder
 
     private function crearEspecialidades()
     {
+        // Solo 5 especialidades para demo (1 sala cada una = 5 salas totales)
         $especialidadesData = [
             ['nombre' => 'Medicina Interna', 'descripcion' => 'Diagnóstico y tratamiento de enfermedades de adultos'],
             ['nombre' => 'Cirugía General', 'descripcion' => 'Procedimientos quirúrgicos generales'],
             ['nombre' => 'Pediatría', 'descripcion' => 'Atención médica de niños y adolescentes'],
-            ['nombre' => 'Ginecología y Obstetricia', 'descripcion' => 'Salud reproductiva y embarazo'],
             ['nombre' => 'Traumatología', 'descripcion' => 'Tratamiento de lesiones del sistema musculoesquelético'],
-            ['nombre' => 'Neurología', 'descripcion' => 'Enfermedades del sistema nervioso'],
             ['nombre' => 'Neumología', 'descripcion' => 'Enfermedades del sistema respiratorio'],
-            ['nombre' => 'Nefrología', 'descripcion' => 'Enfermedades renales y del sistema urinario'],
         ];
 
         $especialidades = [];
-        foreach ($especialidadesData as $espData) {
+        foreach ($especialidadesData as $index => $espData) {
             $especialidad = Especialidad::firstOrCreate(
                 ['nombre' => $espData['nombre'], 'hospital_id' => $this->hospital->id],
                 ['descripcion' => $espData['descripcion'], 'estado' => true]
             );
 
-            // Crear 2-3 salas por especialidad
-            $numSalas = rand(2, 3);
-            for ($i = 1; $i <= $numSalas; $i++) {
-                $sala = Sala::firstOrCreate(
-                    ['nombre' => "Sala {$espData['nombre']} {$i}", 'especialidad_id' => $especialidad->id],
-                    ['tipo' => 'Sala de Internación', 'estado' => true]
-                );
+            // Crear SOLO 1 sala por especialidad (5 salas totales)
+            $sala = Sala::firstOrCreate(
+                ['nombre' => "Sala " . ($index + 1), 'especialidad_id' => $especialidad->id],
+                ['tipo' => 'Sala de Internación', 'estado' => true]
+            );
 
-                // Crear 4-6 camas por sala
-                $numCamas = rand(4, 6);
-                for ($j = 1; $j <= $numCamas; $j++) {
-                    Cama::firstOrCreate(
-                        ['nombre' => "Cama {$i}{$j}", 'sala_id' => $sala->id],
-                        ['tipo' => 'Estándar', 'estado' => true, 'disponibilidad' => true]
-                    );
-                }
+            // Crear exactamente 5 camas por sala (25 camas totales)
+            for ($j = 1; $j <= 5; $j++) {
+                Cama::firstOrCreate(
+                    ['nombre' => "Cama " . ($index + 1) . "-" . $j, 'sala_id' => $sala->id],
+                    ['tipo' => 'Estándar', 'estado' => true, 'disponibilidad' => true]
+                );
             }
 
             $especialidades[] = $especialidad;
@@ -183,25 +173,18 @@ class HospitalCompletoSeeder extends Seeder
 
     private function crearPacientesCompletos($especialidades)
     {
+        // Solo 10 pacientes para demo
         $pacientesData = [
             ['ci' => '7654321', 'nombre' => 'María', 'apellidos' => 'Gonzales Pérez', 'fecha_nacimiento' => '1990-03-15', 'genero' => 'femenino', 'telefono' => '71234567', 'diagnostico' => 'Neumonía bacteriana', 'especialidad' => 'Neumología'],
             ['ci' => '8765432', 'nombre' => 'Pedro', 'apellidos' => 'Mamani Quispe', 'fecha_nacimiento' => '1978-07-22', 'genero' => 'masculino', 'telefono' => '72345678', 'diagnostico' => 'Fractura de fémur', 'especialidad' => 'Traumatología'],
             ['ci' => '9876543', 'nombre' => 'Ana', 'apellidos' => 'Flores Rojas', 'fecha_nacimiento' => '1985-11-08', 'genero' => 'femenino', 'telefono' => '73456789', 'diagnostico' => 'Diabetes descompensada', 'especialidad' => 'Medicina Interna'],
             ['ci' => '6543210', 'nombre' => 'Luis', 'apellidos' => 'Vargas Morales', 'fecha_nacimiento' => '1995-01-30', 'genero' => 'masculino', 'telefono' => '74567890', 'diagnostico' => 'Apendicitis aguda', 'especialidad' => 'Cirugía General'],
-            ['ci' => '5432109', 'nombre' => 'Carmen', 'apellidos' => 'López Castro', 'fecha_nacimiento' => '1982-09-12', 'genero' => 'femenino', 'telefono' => '75678901', 'diagnostico' => 'Insuficiencia renal crónica', 'especialidad' => 'Nefrología'],
-            ['ci' => '4321098', 'nombre' => 'Jorge', 'apellidos' => 'Sánchez Díaz', 'fecha_nacimiento' => '1970-05-25', 'genero' => 'masculino', 'telefono' => '76789012', 'diagnostico' => 'Accidente cerebrovascular', 'especialidad' => 'Neurología'],
-            ['ci' => '3210987', 'nombre' => 'Rosa', 'apellidos' => 'Mendoza Torres', 'fecha_nacimiento' => '1988-12-03', 'genero' => 'femenino', 'telefono' => '77890123', 'diagnostico' => 'Embarazo de alto riesgo', 'especialidad' => 'Ginecología y Obstetricia'],
-            ['ci' => '2109876', 'nombre' => 'Ricardo', 'apellidos' => 'Fernández Silva', 'fecha_nacimiento' => '1992-06-18', 'genero' => 'masculino', 'telefono' => '78901234', 'diagnostico' => 'Bronquitis aguda', 'especialidad' => 'Neumología'],
-            ['ci' => '1098765', 'nombre' => 'Patricia', 'apellidos' => 'Ramírez Gutiérrez', 'fecha_nacimiento' => '1975-02-28', 'genero' => 'femenino', 'telefono' => '79012345', 'diagnostico' => 'Hipertensión arterial severa', 'especialidad' => 'Medicina Interna'],
+            ['ci' => '5432109', 'nombre' => 'Carmen', 'apellidos' => 'López Castro', 'fecha_nacimiento' => '1982-09-12', 'genero' => 'femenino', 'telefono' => '75678901', 'diagnostico' => 'Bronquitis aguda', 'especialidad' => 'Neumología'],
+            ['ci' => '4321098', 'nombre' => 'Jorge', 'apellidos' => 'Sánchez Díaz', 'fecha_nacimiento' => '1970-05-25', 'genero' => 'masculino', 'telefono' => '76789012', 'diagnostico' => 'Hipertensión severa', 'especialidad' => 'Medicina Interna'],
+            ['ci' => '3210987', 'nombre' => 'Rosa', 'apellidos' => 'Mendoza Torres', 'fecha_nacimiento' => '1988-12-03', 'genero' => 'femenino', 'telefono' => '77890123', 'diagnostico' => 'Asma bronquial', 'especialidad' => 'Neumología'],
+            ['ci' => '2109876', 'nombre' => 'Ricardo', 'apellidos' => 'Fernández Silva', 'fecha_nacimiento' => '1992-06-18', 'genero' => 'masculino', 'telefono' => '78901234', 'diagnostico' => 'Luxación de hombro', 'especialidad' => 'Traumatología'],
+            ['ci' => '1098765', 'nombre' => 'Patricia', 'apellidos' => 'Ramírez Gutiérrez', 'fecha_nacimiento' => '1975-02-28', 'genero' => 'femenino', 'telefono' => '79012345', 'diagnostico' => 'Colecistitis aguda', 'especialidad' => 'Cirugía General'],
             ['ci' => '9087654', 'nombre' => 'Miguel', 'apellidos' => 'Cruz Herrera', 'fecha_nacimiento' => '2010-08-14', 'genero' => 'masculino', 'telefono' => '71111111', 'diagnostico' => 'Gastroenteritis aguda', 'especialidad' => 'Pediatría'],
-            ['ci' => '8976543', 'nombre' => 'Elena', 'apellidos' => 'Ortiz Vega', 'fecha_nacimiento' => '1980-04-07', 'genero' => 'femenino', 'telefono' => '72222222', 'diagnostico' => 'Colecistitis aguda', 'especialidad' => 'Cirugía General'],
-            ['ci' => '7865432', 'nombre' => 'Fernando', 'apellidos' => 'Molina Paredes', 'fecha_nacimiento' => '1968-10-19', 'genero' => 'masculino', 'telefono' => '73333333', 'diagnostico' => 'Insuficiencia cardíaca', 'especialidad' => 'Cardiología'],
-            ['ci' => '6754321', 'nombre' => 'Silvia', 'apellidos' => 'Ríos Campos', 'fecha_nacimiento' => '1993-07-11', 'genero' => 'femenino', 'telefono' => '74444444', 'diagnostico' => 'Pielonefritis aguda', 'especialidad' => 'Nefrología'],
-            ['ci' => '5643210', 'nombre' => 'Alberto', 'apellidos' => 'Navarro Soto', 'fecha_nacimiento' => '1987-01-23', 'genero' => 'masculino', 'telefono' => '75555555', 'diagnostico' => 'Traumatismo craneoencefálico', 'especialidad' => 'Neurología'],
-            ['ci' => '4532109', 'nombre' => 'Gabriela', 'apellidos' => 'Chávez Luna', 'fecha_nacimiento' => '1991-09-05', 'genero' => 'femenino', 'telefono' => '76666666', 'diagnostico' => 'Asma bronquial severa', 'especialidad' => 'Neumología'],
-            ['ci' => '3421098', 'nombre' => 'Daniel', 'apellidos' => 'Medina Ramos', 'fecha_nacimiento' => '2008-03-27', 'genero' => 'masculino', 'telefono' => '77777777', 'diagnostico' => 'Bronquiolitis', 'especialidad' => 'Pediatría'],
-            ['ci' => '2310987', 'nombre' => 'Verónica', 'apellidos' => 'Salazar Ibáñez', 'fecha_nacimiento' => '1984-11-16', 'genero' => 'femenino', 'telefono' => '78888888', 'diagnostico' => 'Hernia inguinal', 'especialidad' => 'Cirugía General'],
-            ['ci' => '1209876', 'nombre' => 'Andrés', 'apellidos' => 'Cortez Aguilar', 'fecha_nacimiento' => '1972-05-09', 'genero' => 'masculino', 'telefono' => '79999999', 'diagnostico' => 'Úlcera péptica perforada', 'especialidad' => 'Cirugía General'],
         ];
 
         foreach ($pacientesData as $index => $pData) {

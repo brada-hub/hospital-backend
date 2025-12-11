@@ -101,10 +101,27 @@ class InternacionController extends Controller
             'ocupacionActiva.cama.sala',
 
             'tratamientos' => function ($query) {
-                $query->with(['medico', 'recetas.medicamento']);
+                // Cargar TODOS los tratamientos (activos e inactivos)
+                $query->orderBy('created_at', 'desc')->with([
+                    'medico:id,nombre,apellidos',
+                    'recetas' => function ($q_receta) {
+                        // Cargar TODAS las recetas
+                        $q_receta->with('medicamento:id,nombre')
+                             ->with(['administras' => fn($q) => $q->latest('fecha')->with('user:id,nombre,apellidos')]);
+                    },
+                ]);
             },
 
-            'alimentaciones.tipoDieta',
+            'alimentaciones' => function ($q) {
+                $q->with([
+                    'tipoDieta:id,nombre',
+                    'tiempos',
+                    'consumes' => function ($q_consumo) {
+                        $q_consumo->with('registradoPor:id,nombre,apellidos')
+                            ->latest('created_at');
+                    }
+                ])->latest('fecha_inicio');
+            },
 
             // ✅ CRÍTICO: Cargar controles con TODAS sus relaciones
             'controles' => function ($query) {
@@ -116,6 +133,11 @@ class InternacionController extends Controller
         ]);
 
         $this->transformarDatosParaFrontend($internacion);
+
+        // Asegurar formato de array para controles
+        if ($internacion->controles instanceof Collection) {
+            $internacion->setRelation('controles', $internacion->controles->values());
+        }
 
         return response()->json($internacion);
     }
@@ -197,6 +219,82 @@ class InternacionController extends Controller
         });
 
         Log::info('Procesamiento completo. Enviando respuesta final al frontend.');
+
+        return response()->json($internaciones);
+    }
+
+    /**
+     * 🥗 Internaciones activas para el Panel de Nutrición.
+     * Incluye datos clínicos necesarios para la toma de decisiones del nutricionista.
+     */
+    public function getInternacionesActivas()
+    {
+        $internaciones = Internacion::activas()
+            ->with([
+                'paciente:id,nombre,apellidos,ci,fecha_nacimiento',
+                'ocupacionActiva.cama.sala:id,nombre',
+                'alimentaciones' => function ($q) {
+                    $q->where('estado', 0)->with(['tipoDieta:id,nombre', 'tiempos'])->latest('fecha_inicio');
+                },
+                // Tratamientos activos para ver medicamentos
+                'tratamientos' => function ($q) {
+                    $q->where('estado', 0)->with(['recetas' => function ($qr) {
+                        $qr->where('estado', 0)->with('medicamento:id,nombre');
+                    }]);
+                },
+                // Controles para peso y altura
+                'controles' => function ($q) {
+                    $q->orderBy('fecha_control', 'asc')->with('valores.signo:id,nombre,unidad');
+                }
+            ])
+            ->latest('fecha_ingreso')
+            ->get();
+
+        // Procesar datos clínicos para el nutricionista
+        $internaciones->each(function ($internacion) {
+            // Alimentación activa
+            $internacion->alimentacion_activa = $internacion->alimentaciones->first();
+
+            // Calcular edad
+            if ($internacion->paciente && $internacion->paciente->fecha_nacimiento) {
+                $internacion->paciente->edad = Carbon::parse($internacion->paciente->fecha_nacimiento)->age;
+            }
+
+            // Obtener peso, altura e IMC del primer control
+            $datos = ['peso' => null, 'altura' => null, 'imc' => null];
+            $controlDeIngreso = $internacion->controles->first(function ($c) {
+                return $c->valores->contains(fn($v) => in_array($v->signo->nombre ?? '', ['Peso', 'Altura']));
+            });
+
+            if ($controlDeIngreso) {
+                $peso = $controlDeIngreso->valores->firstWhere('signo.nombre', 'Peso');
+                $altura = $controlDeIngreso->valores->firstWhere('signo.nombre', 'Altura');
+
+                if ($peso) $datos['peso'] = floatval($peso->medida);
+                if ($altura) $datos['altura'] = floatval($altura->medida);
+
+                if ($datos['peso'] && $datos['altura'] && $datos['altura'] > 0) {
+                    $alturaM = $datos['altura'] / 100;
+                    $datos['imc'] = round($datos['peso'] / ($alturaM ** 2), 1);
+                }
+            }
+            $internacion->datos_antropometricos = $datos;
+
+            // Medicamentos activos (para considerar interacciones)
+            $medicamentos = [];
+            foreach ($internacion->tratamientos as $tratamiento) {
+                foreach ($tratamiento->recetas as $receta) {
+                    if ($receta->medicamento) {
+                        $medicamentos[] = $receta->medicamento->nombre;
+                    }
+                }
+            }
+            $internacion->medicamentos_activos = array_unique($medicamentos);
+
+            // Limpiar relaciones no necesarias en la respuesta
+            unset($internacion->controles);
+            unset($internacion->tratamientos);
+        });
 
         return response()->json($internaciones);
     }

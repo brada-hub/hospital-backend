@@ -47,6 +47,11 @@ class DatabaseSeeder extends Seeder
             ['descripcion' => 'Acceso a gestión de cuidados y administración', 'estado' => true]
         );
 
+        $nutricionistaRol = Rol::firstOrCreate(
+            ['nombre' => 'NUTRICIONISTA'],
+            ['descripcion' => 'Acceso a gestión de planes nutricionales', 'estado' => true]
+        );
+
         // ✅ NUEVO ROL: PACIENTE
         $pacienteRol = Rol::firstOrCreate(
             ['nombre' => 'PACIENTE'],
@@ -113,6 +118,7 @@ class DatabaseSeeder extends Seeder
             ['nombre' => 'acceso.mis-pacientes', 'descripcion' => 'Acceso a la vista de pacientes asignados al médico'],
             ['nombre' => 'acceso.estacion-enfermeria', 'descripcion' => 'Acceso a la Estación de Enfermería'],
             ['nombre' => 'acceso.mi-internacion', 'descripcion' => 'Acceso mi internaciona'],
+            ['nombre' => 'acceso.nutricion', 'descripcion' => 'Acceso a gestión de dietas'], // ✅ Nuevo permiso
         ];
 
         $permissions = collect($permissions)->map(fn($p) => Permission::firstOrCreate($p));
@@ -123,7 +129,6 @@ class DatabaseSeeder extends Seeder
         $medicoRol->permissions()->sync(
             $permissions->whereIn('nombre', [
                 'acceso.dashboard',
-                'acceso.pacientes',
                 'acceso.admision',
                 'acceso.panel-internacion',
                 'acceso.mis-pacientes'
@@ -136,6 +141,16 @@ class DatabaseSeeder extends Seeder
                 'acceso.pacientes',
                 'acceso.panel-internacion',
                 'acceso.estacion-enfermeria'
+            ])->pluck('id')
+        );
+
+        $nutricionistaRol->permissions()->sync(
+            $permissions->whereIn('nombre', [
+                'acceso.dashboard',
+                'acceso.panel-internacion',
+
+
+                'acceso.nutricion',     // Permiso clave
             ])->pluck('id')
         );
 
@@ -179,6 +194,18 @@ class DatabaseSeeder extends Seeder
                 'telefono' => 70002222,
                 'password' => Hash::make('12345678'),
                 'rol_id' => $enfermeraRol->id,
+                'hospital_id' => $hospital->id
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'nutri@hospital.com'],
+            [
+                'nombre' => 'Lic. Nutrición',
+                'apellidos' => 'Saludable',
+                'telefono' => 70003333,
+                'password' => Hash::make('12345678'),
+                'rol_id' => $nutricionistaRol->id,
                 'hospital_id' => $hospital->id
             ]
         );
