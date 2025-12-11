@@ -23,12 +23,18 @@ Route::middleware('auth')->group(function () {
 });
 
 // --- RUTA TEMPORAL PARA SEEDER (Public) ---
-Route::get('/seed-exec', function () {
+// --- RUTA TEMPORAL PARA RESETEAR DB (PELIGROSA) ---
+Route::get('/reset-db-production-999', function () {
     try {
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-        return 'EXACTO: Base de datos poblada correctamente (Seed ejecutado).';
+        // 1. Borrar todas las tablas
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
+            '--force' => true,
+            '--seed' => true // 2. Ejecutar seeders inmediatamente
+        ]);
+
+        return 'ÉXITO TOTAL: Se ha borrado la base de datos y se ha vuelto a llenar con los nuevos datos (Fresh + Seed).';
     } catch (\Exception $e) {
-        return 'ERROR: ' . $e->getMessage();
+        return 'ERROR CRÍTICO: ' . $e->getMessage() . ' <br> Trace: ' . $e->getTraceAsString();
     }
 });
 
