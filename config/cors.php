@@ -30,8 +30,10 @@ return [
         'http://127.0.0.1:3000',
         // ORÍGENES DE CAPACITOR/MOVIL
         'http://localhost',
+        'https://localhost',
         'capacitor://localhost',
         'ionic://localhost',
+        'file://',
         // WEB
         'https://hospital-frontend-taupe.vercel.app',
         'https://hospital-frontend-dtj180a2u.vercel.app',
