@@ -53,7 +53,7 @@ class HospitalCompletoSeeder extends Seeder
         Control::truncate();
         Ocupacion::truncate();
         Internacion::truncate();
-        
+
         // ✅ LIMPIAR PACIENTES Y SUS USUARIOS
         $pacienteRolTemp = Rol::where('nombre', 'PACIENTE')->first();
         if ($pacienteRolTemp) {
@@ -61,7 +61,7 @@ class HospitalCompletoSeeder extends Seeder
             Paciente::whereIn('user_id', $usuariosPacientes)->delete();
             User::whereIn('id', $usuariosPacientes)->delete();
         }
-        
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // ✅ RESETEAR DISPONIBILIDAD DE TODAS LAS CAMAS
@@ -78,7 +78,7 @@ class HospitalCompletoSeeder extends Seeder
 
         // Crear especialidades, salas y camas
         $especialidades = $this->crearEspecialidades();
-        
+
         // Crear y registrar pacientes
         $this->crearPacientesCompletos($especialidades);
 
@@ -211,20 +211,7 @@ class HospitalCompletoSeeder extends Seeder
                 $especialidad = $especialidades[0]; // Fallback a la primera especialidad
             }
 
-            // Crear usuario para el paciente
-            $usuario = User::firstOrCreate(
-                ['email' => strtolower($pData['nombre']) . '.' . strtolower(explode(' ', $pData['apellidos'])[0]) . '@paciente.com'],
-                [
-                    'nombre' => $pData['nombre'],
-                    'apellidos' => $pData['apellidos'],
-                    'telefono' => $pData['telefono'],
-                    'password' => Hash::make('paciente123'),
-                    'rol_id' => $this->pacienteRol->id,
-                    'hospital_id' => $this->hospital->id
-                ]
-            );
-
-            // Crear paciente y vincularlo con el usuario
+            // Crear paciente SIN usuario
             $paciente = Paciente::firstOrCreate(
                 ['ci' => $pData['ci']],
                 [
@@ -237,7 +224,7 @@ class HospitalCompletoSeeder extends Seeder
                     'nombre_referencia' => 'Familiar',
                     'apellidos_referencia' => $pData['apellidos'],
                     'celular_referencia' => '7' . rand(0000000, 9999999),
-                    'user_id' => $usuario->id,  // ✅ VINCULAMOS EL USUARIO CON EL PACIENTE
+                    // 'user_id' => null,  // ✅ SIN USUARIO
                     'estado' => true
                 ]
             );
@@ -255,7 +242,7 @@ class HospitalCompletoSeeder extends Seeder
             // Crear internación
             $medico = $this->medicos[array_rand($this->medicos)];
             $fechaIngreso = Carbon::now()->subDays(rand(1, 7))->subHours(rand(0, 23));
-            
+
             $internacion = Internacion::create([
                 'fecha_ingreso' => $fechaIngreso,
                 'motivo' => 'Ingreso por ' . strtolower($pData['diagnostico']),
@@ -289,7 +276,7 @@ class HospitalCompletoSeeder extends Seeder
     private function registrarSignosVitales($internacion, $fechaIngreso)
     {
         $numControles = rand(4, 5);
-        
+
         for ($i = 0; $i < $numControles; $i++) {
             $enfermera = $this->enfermeras[array_rand($this->enfermeras)];
             $fechaControl = $fechaIngreso->copy()->addHours($i * 6);
@@ -344,7 +331,7 @@ class HospitalCompletoSeeder extends Seeder
         foreach ($medicamentosSeleccionados as $medicamento) {
             $frecuenciaHoras = [4, 6, 8, 12, 24][array_rand([4, 6, 8, 12, 24])];
             $vias = ['Oral', 'Intravenosa', 'Intramuscular', 'Subcutánea'];
-            
+
             $receta = $tratamiento->recetas()->create([
                 'medicamento_id' => $medicamento->id,
                 'dosis' => rand(5, 50) . ['mg', 'ml', 'g'][array_rand(['mg', 'ml', 'g'])],
@@ -364,14 +351,14 @@ class HospitalCompletoSeeder extends Seeder
     private function registrarAdministraciones($receta, $fechaIngreso, $frecuenciaHoras)
     {
         $numAdministraciones = rand(3, 6);
-        
+
         for ($i = 0; $i < $numAdministraciones; $i++) {
             $enfermera = $this->enfermeras[array_rand($this->enfermeras)];
             $horaProgramada = $fechaIngreso->copy()->addHours($i * $frecuenciaHoras);
-            
+
             // Algunas administraciones pueden tener un pequeño retraso
             $estado = rand(0, 10) > 2 ? 1 : 2; // 80% cumplida, 20% con retraso
-            
+
             Administra::create([
                 'receta_id' => $receta->id,
                 'hora_programada' => $horaProgramada,
@@ -390,7 +377,7 @@ class HospitalCompletoSeeder extends Seeder
         }
 
         $tipoDieta = $this->tiposDieta->random();
-        
+
         $alimentacion = Alimentacion::create([
             'internacion_id' => $internacion->id,
             'tipo_dieta_id' => $tipoDieta->id,
@@ -429,7 +416,7 @@ class HospitalCompletoSeeder extends Seeder
             foreach ($tiemposComida as $index => $tiempo) {
                 $enfermera = $this->enfermeras[array_rand($this->enfermeras)];
                 $fechaConsumo = $fechaIngreso->copy()->addDays($dia)->setHour($horasComida[$index])->setMinute(0);
-                
+
                 Consume::create([
                     'tratamiento_id' => $tratamiento->id,
                     'alimentacion_id' => $alimentacion->id,
@@ -450,7 +437,7 @@ class HospitalCompletoSeeder extends Seeder
             if ($horaActual >= $horasComida[$index]) {
                 $enfermera = $this->enfermeras[array_rand($this->enfermeras)];
                 $fechaConsumo = $hoy->copy()->setHour($horasComida[$index])->setMinute(rand(0, 59));
-                
+
                 Consume::create([
                     'tratamiento_id' => $tratamiento->id,
                     'alimentacion_id' => $alimentacion->id,
@@ -492,11 +479,11 @@ class HospitalCompletoSeeder extends Seeder
     private function registrarAplicacionesCuidados($cuidado, $fechaIngreso)
     {
         $numAplicaciones = rand(3, 6);
-        
+
         for ($i = 0; $i < $numAplicaciones; $i++) {
             $enfermera = $this->enfermeras[array_rand($this->enfermeras)];
             $fechaAplicacion = $fechaIngreso->copy()->addHours($i * 6);
-            
+
             CuidadoAplicado::create([
                 'user_id' => $enfermera->id,
                 'cuidado_id' => $cuidado->id,

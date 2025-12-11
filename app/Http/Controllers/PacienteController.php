@@ -40,49 +40,20 @@ class PacienteController extends Controller
             'estado' => 'required|boolean'
         ]);
 
-        DB::beginTransaction();
         try {
-            $rolPaciente = Rol::where('nombre', 'PACIENTE')->first();
+            // Eliminar lógica de creación de usuario
+            // $data['user_id'] = null; // Asumimos que es nullable o no se envía
 
-            if (!$rolPaciente) {
-                throw new \Exception('El rol PACIENTE no existe. Ejecuta el seeder primero.');
-            }
-
-            $usuarioAutenticado = Auth::user();
-            if (!$usuarioAutenticado) {
-                throw new \Exception('Usuario no autenticado.');
-            }
-
-            /** @var User $user */
-            $user = User::create([
-                'nombre' => $data['nombre'],
-                'apellidos' => $data['apellidos'],
-                'email' => strtolower(str_replace(['-', ' '], '', $data['ci'])) . '@paciente.local',
-                'telefono' => $data['telefono'],
-                'password' => Hash::make($data['ci']),
-                'rol_id' => $rolPaciente->id,
-                'hospital_id' => $usuarioAutenticado->hospital_id,
-            ]);
-
-            $data['user_id'] = $user->id;
             $paciente = Paciente::create($data);
 
-            DB::commit();
-            Log::info('Paciente y usuario creados', [
-                'paciente_id' => $paciente->id,
-                'user_id' => $user->id
-            ]);
+            Log::info('Paciente creado', ['paciente_id' => $paciente->id]);
 
             return response()->json([
                 'paciente' => $paciente,
-                'credenciales' => [
-                    'email' => $user->email,
-                    'password' => $data['ci'],
-                ]
+                'message' => 'Paciente registrado correctamente'
             ], 201);
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error al crear paciente y usuario', ['error' => $e->getMessage()]);
+            Log::error('Error al crear paciente', ['error' => $e->getMessage()]);
             return response()->json([
                 'message' => 'Error al crear paciente: ' . $e->getMessage()
             ], 500);
@@ -171,15 +142,8 @@ class PacienteController extends Controller
             'estado' => 'required|boolean'
         ]);
 
-        $paciente->load('user');
-
-        if ($paciente->user) {
-            $paciente->user->update([
-                'nombre' => $data['nombre'],
-                'apellidos' => $data['apellidos'],
-                'telefono' => $data['telefono'],
-            ]);
-        }
+        // $paciente->load('user');
+        // if ($paciente->user) { ... }
 
         $paciente->update($data);
         Log::info('Paciente actualizado', ['id' => $paciente->id]);
@@ -191,11 +155,8 @@ class PacienteController extends Controller
     {
         /** @var Paciente $paciente */
         $paciente = Paciente::findOrFail($id);
-        $paciente->load('user');
-
-        if ($paciente->user) {
-            // $paciente->user->update(['activo' => false]);
-        }
+        // $paciente->load('user');
+        // if ($paciente->user) { ... }
 
         $paciente->update(['estado' => !$paciente->estado]);
         Log::warning('Estado del paciente actualizado', ['id' => $id]);

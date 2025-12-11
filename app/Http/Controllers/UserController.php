@@ -85,6 +85,7 @@ class UserController extends Controller
         ]);
 
         $data['password'] = Hash::make($data['password']);
+        $data['must_change_password'] = true; // ✅ Obligar cambio de contraseña
 
         $user = User::create($data);
 
@@ -235,6 +236,7 @@ class UserController extends Controller
 
         // Actualizamos con la nueva contraseña
         $user->password = Hash::make($request->password);
+        $user->must_change_password = false; // ✅ Desbloquear cuenta
         $user->save();
 
         // Opcional pero recomendado: Desloguear de otras sesiones
