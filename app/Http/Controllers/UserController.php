@@ -224,14 +224,25 @@ class UserController extends Controller
     {
         $user = $request->user();
 
-        $request->validate([
-            'current_password' => 'required|string',
-            'password'         => 'required|string|min:8|confirmed', // password_confirmation debe coincidir
-        ]);
+        // Reglas básicas
+        $rules = [
+            'password' => 'required|string|min:8|confirmed',
+        ];
 
-        // Verificamos que la contraseña actual sea correcta
-        if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json(['message' => 'La contraseña actual es incorrecta.'], 422);
+        // Validar contraseña actual SOLO si no está en modo "cambio obligatorio"
+        // O si el usuario quiere cambiarla voluntariamente (must_change_password == false)
+        // PERO el requerimiento es que si es must_change_password, se salte este paso.
+        if (!$user->must_change_password) {
+            $rules['current_password'] = 'required|string';
+        }
+
+        $request->validate($rules);
+
+        // Verificamos la contraseña actual SOLO si no es obligatorio el cambio
+        if (!$user->must_change_password) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json(['message' => 'La contraseña actual es incorrecta.'], 422);
+            }
         }
 
         // Actualizamos con la nueva contraseña
