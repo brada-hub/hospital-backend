@@ -23,7 +23,7 @@ class SignoSeeder extends Seeder
             ['nombre' => 'Presión Arterial', 'unidad' => 'mmHg', 'es_rutinario' => true, 'requiere_valores_duales' => true],
 
             // Los demás son valores simples
-            ['nombre' => 'Frecuencia Cardíaca', 'unidad' => 'lpm', 'es_rutinario' => true, 'requiere_valores_duales' => false],
+            ['nombre' => 'Frecuencia Cardíaca', 'unidad' => 'lpm', 'es_rutinario' => true, 'requiere_valores_duales' => true],
             ['nombre' => 'Frecuencia Respiratoria', 'unidad' => 'rpm', 'es_rutinario' => true, 'requiere_valores_duales' => false],
             ['nombre' => 'Temperatura', 'unidad' => '°C', 'es_rutinario' => true, 'requiere_valores_duales' => false],
             ['nombre' => 'Saturación de Oxígeno', 'unidad' => '%', 'es_rutinario' => true, 'requiere_valores_duales' => false],

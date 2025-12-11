@@ -38,6 +38,7 @@ class ControlController extends Controller
                 'valores'        => 'required|array|min:1',
                 'valores.*.signo_id' => 'required|exists:signos,id',
                 'valores.*.medida'   => 'required|numeric',
+                'valores.*.medida_baja' => 'nullable',
             ]);
 
             try {
@@ -58,6 +59,7 @@ class ControlController extends Controller
                             'control_id' => $control->id,
                             'signo_id' => $valor['signo_id'],
                             'medida' => $valor['medida'],
+                            'medida_baja' => $valor['medida_baja'] ?? null,
                         ]);
 
                         // Verificar si está fuera de rango

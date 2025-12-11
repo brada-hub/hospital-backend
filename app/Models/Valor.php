@@ -16,6 +16,7 @@ class Valor extends Model
         'control_id',
         'signo_id',
         'medida',
+        'medida_baja',
     ];
 
     public function control()
