@@ -6,6 +6,7 @@ use App\Models\Cama;
 use App\Models\Internacion;
 use App\Models\Ocupacion;
 use App\Models\Cuidado; // Importar el modelo Cuidado
+use App\Models\Notificacion; // Importar Notificacion
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -98,6 +99,16 @@ class AdmisionController extends Controller
                         ]);
                     }
                 }
+
+                // --- Parte 4: Notificar al Médico ---
+                Notificacion::create([
+                    'user_id' => $admisionData['medico_id'],
+                    'internacion_id' => $internacion->id,
+                    'tipo' => 'informacion', // O 'recordatorio'
+                    'titulo' => "Nuevo Paciente Asignado",
+                    'mensaje' => "Se le ha asignado el paciente {$internacion->paciente->nombre} {$internacion->paciente->apellidos} en la cama {$cama->nombre} (Sala {$cama->sala->nombre}).",
+                    'leida' => false,
+                ]);
 
                 Log::info('Proceso de admisión registrado.', ['internacion_id' => $internacion->id, 'user_id' => Auth::id()]);
                 return $internacion;

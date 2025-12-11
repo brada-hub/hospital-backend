@@ -126,10 +126,10 @@ class ControlController extends Controller
         $pacienteNombre = "{$internacion->paciente->nombre} {$internacion->paciente->apellidos}";
 
         // Construir mensaje
-        $mensajeDetalle = "Los siguientes signos vitales están fuera de rango:\n\n";
+        $mensajeDetalle = "Se han detectado valores fuera de rango:\n";
         foreach ($alertas as $alerta) {
             $mensajeDetalle .= "• {$alerta['signo']}: {$alerta['valor']} {$alerta['unidad']} ";
-            $mensajeDetalle .= "(Rango normal: {$alerta['rango']})\n";
+            $mensajeDetalle .= "(Normal: {$alerta['rango']})\n";
         }
 
         // Crear notificación
@@ -138,7 +138,7 @@ class ControlController extends Controller
             'internacion_id' => $internacion->id,
             'control_id' => $control->id,
             'tipo' => 'critica',
-            'titulo' => "⚠️ Alerta: Signos vitales anormales - {$pacienteNombre}",
+            'titulo' => "Signos Vitales - {$pacienteNombre}",
             'mensaje' => $mensajeDetalle,
             'leida' => false,
         ]);
