@@ -47,6 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- PERFIL / SESIÓN ---
     Route::get('/me', [UserController::class, 'me']);
     Route::post('/logout', [UserController::class, 'logout']);
+    Route::put('/user/profile', [UserController::class, 'updateProfile']); // ✅ Faltaba esta
+    Route::put('/user/password', [UserController::class, 'updatePassword']); // ✅ Faltaba esta
 
     // --- ADMISIONES ---
     Route::get('/camas-disponibles', [CamaController::class, 'getDisponibles']);
