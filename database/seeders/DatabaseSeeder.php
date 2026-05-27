@@ -163,7 +163,7 @@ class DatabaseSeeder extends Seeder
 
         // --- Usuarios ---
         User::firstOrCreate(
-            ['email' => 'admin@hospital.com'],
+            ['email' => 'admin'],
             [
                 'nombre' => 'Admin',
                 'apellidos' => 'Principal',
@@ -175,7 +175,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::firstOrCreate(
-            ['email' => 'medico@hospital.com'],
+            ['email' => 'medico'],
             [
                 'nombre' => 'Doctor',
                 'apellidos' => 'Smith',
@@ -187,7 +187,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::firstOrCreate(
-            ['email' => 'enfermera@hospital.com'],
+            ['email' => 'enfermera'],
             [
                 'nombre' => 'Enfermera',
                 'apellidos' => 'Jane',
@@ -199,7 +199,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::firstOrCreate(
-            ['email' => 'nutri@hospital.com'],
+            ['email' => 'nutri'],
             [
                 'nombre' => 'Lic. Nutrición',
                 'apellidos' => 'Saludable',

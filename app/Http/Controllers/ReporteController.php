@@ -11,9 +11,9 @@ use Carbon\Carbon;
 class ReporteController extends Controller
 {
     /**
-     * 📄 Genera el informe de alta (Epicrisis) de una internación
+     * 📄 Obtiene la instancia de PDF para la Epicrisis (utilizado tanto para guardado interno como descarga)
      */
-    public function generarEpicrisis($internacionId)
+    public function obtenerPdfEpicrisis($internacionId)
     {
         $internacion = Internacion::with([
             'paciente',
@@ -29,15 +29,10 @@ class ReporteController extends Controller
             'cuidados.cuidadosAplicados.user',
         ])->findOrFail($internacionId);
 
-        if (!$internacion->fecha_alta) {
-            return response()->json([
-                'message' => 'No se puede generar epicrisis de una internación activa.'
-            ], 400);
-        }
-
         // Calcular días de estancia
-        $diasEstancia = Carbon::parse($internacion->fecha_ingreso)
-            ->diffInDays(Carbon::parse($internacion->fecha_alta));
+        $fechaIngreso = Carbon::parse($internacion->fecha_ingreso);
+        $fechaAlta = $internacion->fecha_alta ? Carbon::parse($internacion->fecha_alta) : Carbon::now();
+        $diasEstancia = $fechaIngreso->diffInDays($fechaAlta);
 
         // Obtener signos vitales de ingreso y egreso
         $signosIngreso = $this->obtenerSignosVitales($internacion, 'ingreso');
@@ -55,6 +50,13 @@ class ReporteController extends Controller
             ->sortBy('fecha_control')
             ->values();
 
+        // Cargar logotipo en Base64 para inyección robusta en DomPDF
+        $logoPath = public_path('SSTEPI.png');
+        $logoBase64 = '';
+        if (file_exists($logoPath)) {
+            $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+        }
+
         $data = [
             'internacion' => $internacion,
             'ocupacion' => $internacion->ocupacionActiva ?? $internacion->ocupaciones->sortByDesc('created_at')->first(),
@@ -65,18 +67,39 @@ class ReporteController extends Controller
             'resumenAlimentacion' => $resumenAlimentacion,
             'evolucionClinica' => $evolucionClinica,
             'fechaGeneracion' => Carbon::now()->format('d/m/Y H:i'),
+            'logoBase64' => $logoBase64,
         ];
 
         $pdf = Pdf::loadView('reportes.epicrisis', $data);
         $pdf->setPaper('letter', 'portrait');
 
-        return $pdf->download("Epicrisis_{$internacion->paciente->nombre}_{$internacion->paciente->apellidos}_{$internacionId}.pdf");
+        return $pdf;
     }
 
     /**
-     * 📊 Genera reporte de evolución clínica completa
+     * 📄 Genera el informe de alta (Epicrisis) de una internación
      */
-    public function generarEvolucionClinica($internacionId)
+    public function generarEpicrisis($internacionId)
+    {
+        $internacion = Internacion::findOrFail($internacionId);
+
+        if (!$internacion->fecha_alta) {
+            return response()->json([
+                'message' => 'No se puede generar epicrisis de una internación activa.'
+            ], 400);
+        }
+
+        $pdf = $this->obtenerPdfEpicrisis($internacionId);
+        $nombrePaciente = $internacion->paciente?->nombre ?? 'Paciente';
+        $apellidoPaciente = $internacion->paciente?->apellidos ?? 'SinApellido';
+
+        return $pdf->download("Epicrisis_{$nombrePaciente}_{$apellidoPaciente}_{$internacionId}.pdf");
+    }
+
+    /**
+     * 📄 Obtiene la instancia de PDF para la evolución clínica completa
+     */
+    public function obtenerPdfEvolucionClinica($internacionId)
     {
         $internacion = Internacion::with([
             'paciente',
@@ -92,16 +115,37 @@ class ReporteController extends Controller
             })
             ->sortKeys();
 
+        // Cargar logotipo en Base64 para inyección robusta en DomPDF
+        $logoPath = public_path('SSTEPI.png');
+        $logoBase64 = '';
+        if (file_exists($logoPath)) {
+            $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+        }
+
         $data = [
             'internacion' => $internacion,
             'controlesPorFecha' => $controlesPorFecha,
             'fechaGeneracion' => Carbon::now()->format('d/m/Y H:i'),
+            'logoBase64' => $logoBase64,
         ];
 
         $pdf = Pdf::loadView('reportes.evolucion-clinica', $data);
         $pdf->setPaper('letter', 'portrait');
 
-        return $pdf->download("Evolucion_Clinica_{$internacion->paciente->nombre}_{$internacion->paciente->apellidos}.pdf");
+        return $pdf;
+    }
+
+    /**
+     * 📊 Genera reporte de evolución clínica completa
+     */
+    public function generarEvolucionClinica($internacionId)
+    {
+        $internacion = Internacion::findOrFail($internacionId);
+        $pdf = $this->obtenerPdfEvolucionClinica($internacionId);
+        $nombrePaciente = $internacion->paciente?->nombre ?? 'Paciente';
+        $apellidoPaciente = $internacion->paciente?->apellidos ?? 'SinApellido';
+
+        return $pdf->download("Evolucion_Clinica_{$nombrePaciente}_{$apellidoPaciente}.pdf");
     }
 
     /**

@@ -172,7 +172,10 @@ class PacienteController extends Controller
         $user = $request->user();
 
         if (!$user->paciente) {
-            return response()->json(['message' => 'Usuario no es un paciente'], 403);
+            return response()->json([
+                'message' => 'El usuario autenticado no está vinculado a ningún expediente de paciente.',
+                'has_internacion' => false
+            ], 200);
         }
 
         $internacion = $user->paciente->internacionActiva()

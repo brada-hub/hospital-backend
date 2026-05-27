@@ -324,7 +324,7 @@ class InternacionController extends Controller
 
             try {
                 $reporteController = new \App\Http\Controllers\ReporteController();
-                $pdf = $reporteController->generarEpicrisis($internacion->id);
+                $pdf = $reporteController->obtenerPdfEpicrisis($internacion->id);
 
                 // Guardar el PDF en storage para acceso posterior
                 $nombreArchivo = "epicrisis_{$internacion->id}_" . now()->format('Y-m-d_His') . ".pdf";

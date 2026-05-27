@@ -14,7 +14,7 @@ return [
     | Métodos permitidos
     |--------------------------------------------------------------------------
     */
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
     /*
     |--------------------------------------------------------------------------
@@ -22,31 +22,33 @@ return [
     |--------------------------------------------------------------------------
     */
     'allowed_origins' => [
-        'http://192.168.0.29',
-        'http://192.168.0.29:3000',
-        'http://192.168.0.29:8080',
         'http://localhost:3000',
-        'http://localhost:8080',
         'http://127.0.0.1:3000',
-        // ORÍGENES DE CAPACITOR/MOVIL
+        'http://localhost:8080',
         'http://localhost',
         'https://localhost',
         'capacitor://localhost',
         'ionic://localhost',
         'file://',
-        // WEB
         'https://hospital-frontend-taupe.vercel.app',
         'https://hospital-frontend-dtj180a2u.vercel.app',
     ],
 
-    'allowed_origins_patterns' => ['*.vercel.app'],
+    'allowed_origins_patterns' => [],
 
     /*
     |--------------------------------------------------------------------------
     | Encabezados permitidos
     |--------------------------------------------------------------------------
     */
-    'allowed_headers' => ['*'],
+    'allowed_headers' => [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+        'Origin',
+        'X-CSRF-TOKEN',
+    ],
 
     /*
     |--------------------------------------------------------------------------

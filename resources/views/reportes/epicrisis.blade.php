@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Epicrisis - {{ $internacion->paciente->nombre }} {{ $internacion->paciente->apellidos }}</title>
+    <title>Epicrisis - {{ $internacion->paciente?->nombre ?? 'Paciente' }} {{ $internacion->paciente?->apellidos ?? '' }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #333; padding: 20px; }
@@ -27,11 +27,22 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>EPICRISIS - INFORME DE ALTA MÉDICA</h1>
-        <p>Hospital: {{ $internacion->medico->hospital->nombre ?? 'N/A' }}</p>
-        <p>Fecha de generación: {{ $fechaGeneracion }}</p>
-    </div>
+    <table style="width: 100%; border-bottom: 2px solid #26a69a; padding-bottom: 10px; margin-bottom: 20px; border-collapse: collapse;">
+        <tr>
+            <td style="width: 30%; border: none; padding: 0; vertical-align: middle;">
+                @if(isset($logoBase64) && $logoBase64)
+                    <img src="{{ $logoBase64 }}" alt="Logo SSTEPI" style="height: 55px; max-width: 150px; object-fit: contain;">
+                @else
+                    <span style="font-size: 14pt; font-weight: bold; color: #00897b;">SSTEPI</span>
+                @endif
+            </td>
+            <td style="width: 70%; text-align: right; border: none; padding: 0; vertical-align: middle;">
+                <h1 style="font-size: 15pt; color: #2c3e50; margin: 0 0 4px 0; padding: 0; font-weight: bold;">EPICRISIS - INFORME DE ALTA MÉDICA</h1>
+                <p style="font-size: 8.5pt; color: #7f8c8d; margin: 0; padding: 0;">Centro Médico: {{ $internacion->medico?->hospital?->nombre ?? 'Hospital General SSTEPI' }}</p>
+                <p style="font-size: 8.5pt; color: #7f8c8d; margin: 0; padding: 0;">Fecha de generación: {{ $fechaGeneracion }}</p>
+            </td>
+        </tr>
+    </table>
 
     <!-- DATOS DEL PACIENTE -->
     <div class="section">
@@ -39,19 +50,25 @@
         <div class="info-grid">
             <div class="info-row">
                 <div class="info-label">Nombre Completo:</div>
-                <div class="info-value">{{ $internacion->paciente->nombre }} {{ $internacion->paciente->apellidos }}</div>
+                <div class="info-value">{{ $internacion->paciente?->nombre ?? 'N/A' }} {{ $internacion->paciente?->apellidos ?? '' }}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">CI:</div>
-                <div class="info-value">{{ $internacion->paciente->ci }}</div>
+                <div class="info-value">{{ $internacion->paciente?->ci ?? 'N/A' }}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Fecha de Nacimiento:</div>
-                <div class="info-value">{{ \Carbon\Carbon::parse($internacion->paciente->fecha_nacimiento)->format('d/m/Y') }} ({{ \Carbon\Carbon::parse($internacion->paciente->fecha_nacimiento)->age }} años)</div>
+                <div class="info-value">
+                    @if($internacion->paciente?->fecha_nacimiento)
+                        {{ \Carbon\Carbon::parse($internacion->paciente->fecha_nacimiento)->format('d/m/Y') }} ({{ \Carbon\Carbon::parse($internacion->paciente->fecha_nacimiento)->age }} años)
+                    @else
+                        N/A
+                    @endif
+                </div>
             </div>
             <div class="info-row">
                 <div class="info-label">Sexo:</div>
-                <div class="info-value">{{ $internacion->paciente->genero }}</div>
+                <div class="info-value">{{ $internacion->paciente?->genero ?? 'N/A' }}</div>
             </div>
         </div>
     </div>
@@ -66,7 +83,7 @@
             </div>
             <div class="info-row">
                 <div class="info-label">Fecha de Alta:</div>
-                <div class="info-value">{{ \Carbon\Carbon::parse($internacion->fecha_alta)->format('d/m/Y H:i') }}</div>
+                <div class="info-value">{{ $internacion->fecha_alta ? \Carbon\Carbon::parse($internacion->fecha_alta)->format('d/m/Y H:i') : 'N/A' }}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Días de Estancia:</div>
@@ -74,15 +91,15 @@
             </div>
             <div class="info-row">
                 <div class="info-label">Médico Tratante:</div>
-                <div class="info-value">Dr(a). {{ $internacion->medico->nombre }} {{ $internacion->medico->apellidos }}</div>
+                <div class="info-value">Dr(a). {{ $internacion->medico?->nombre ?? 'Sin' }} {{ $internacion->medico?->apellidos ?? 'médico asignado' }}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Especialidad:</div>
-                <div class="info-value">{{ $ocupacion->cama->sala->especialidad->nombre ?? 'N/A' }}</div>
+                <div class="info-value">{{ $ocupacion?->cama?->sala?->especialidad?->nombre ?? 'N/A' }}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Sala/Cama:</div>
-                <div class="info-value">{{ $ocupacion->cama->sala->nombre ?? 'N/A' }} - Cama {{ $ocupacion->cama->nombre ?? 'N/A' }}</div>
+                <div class="info-value">{{ $ocupacion?->cama?->sala?->nombre ?? 'N/A' }} - Cama {{ $ocupacion?->cama?->nombre ?? 'Sin cama' }}</div>
             </div>
         </div>
     </div>
@@ -93,11 +110,11 @@
         <div class="info-grid">
             <div class="info-row">
                 <div class="info-label">Motivo de Ingreso:</div>
-                <div class="info-value">{{ $internacion->motivo }}</div>
+                <div class="info-value">{{ $internacion->motivo ?? 'N/A' }}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">Diagnóstico:</div>
-                <div class="info-value">{{ $internacion->diagnostico }}</div>
+                <div class="info-value">{{ $internacion->diagnostico ?? 'N/A' }}</div>
             </div>
         </div>
     </div>
@@ -252,7 +269,7 @@
             @foreach($evolucionClinica as $control)
                 <div style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #3498db;">
                     <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($control->fecha_control)->format('d/m/Y H:i') }}</p>
-                    <p><strong>Registrado por:</strong> {{ $control->user->nombre }} {{ $control->user->apellidos }}</p>
+                    <p><strong>Registrado por:</strong> {{ $control->user?->nombre ?? 'N/A' }} {{ $control->user?->apellidos ?? '' }}</p>
                     <p><strong>Observaciones:</strong> {{ $control->observaciones ?? 'Sin observaciones' }}</p>
                 </div>
             @endforeach

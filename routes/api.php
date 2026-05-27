@@ -109,6 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tratamientos/{tratamiento}', [TratamientoController::class, 'update']);
     // ✅ NUEVA RUTA PARA SUSPENDER UNA RECETA ESPECÍFICA
     Route::post('/recetas/{receta}/suspender', [RecetaController::class, 'suspender']);
+    Route::post('/medicamentos/{id}/dispensar', [MedicamentoController::class, 'dispensar']);
     // Ruta para que los pacientes vean su internación
     Route::get('/mi-internacion', [PacienteController::class, 'miInternacion']);
     // --- DASHBOARD PRINCIPAL ---

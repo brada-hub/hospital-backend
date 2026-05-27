@@ -19,9 +19,10 @@ class MedicamentoController extends Controller
         $data = $request->validate([
             'nombre'             => 'required|string|max:100|unique:medicamentos,nombre',
             'descripcion'        => 'required|string|max:255',
-
-            // MEJORA: Se añade la validación para que la categoría exista.
             'categoria_id'       => 'nullable|exists:medicamento_categorias,id',
+            'stock'              => 'nullable|integer|min:0',
+            'stock_critico'      => 'nullable|integer|min:0',
+            'estante'            => 'nullable|string|max:100',
         ]);
 
         $medicamento = Medicamento::create($data);
@@ -43,9 +44,10 @@ class MedicamentoController extends Controller
         $data = $request->validate([
             'nombre'             => 'required|string|max:100|unique:medicamentos,nombre,' . $medicamento->id,
             'descripcion'        => 'required|string|max:255',
-
-            // MEJORA: Se añade la validación para que la categoría exista.
             'categoria_id'       => 'nullable|exists:medicamento_categorias,id',
+            'stock'              => 'nullable|integer|min:0',
+            'stock_critico'      => 'nullable|integer|min:0',
+            'estante'            => 'nullable|string|max:100',
         ]);
 
         $medicamento->update($data);
@@ -61,5 +63,27 @@ class MedicamentoController extends Controller
 
         Log::warning('Medicamento eliminado', ['id' => $id]);
         return response()->noContent();
+    }
+
+    /**
+     * Dispensar medicamento decrementando stock en caliente.
+     */
+    public function dispensar(Request $request, $id)
+    {
+        $medicamento = Medicamento::findOrFail($id);
+        $data = $request->validate([
+            'cantidad' => 'required|integer|min:1',
+        ]);
+
+        if ($medicamento->stock < $data['cantidad']) {
+            return response()->json([
+                'message' => 'Stock insuficiente para dispensar este fármaco.'
+            ], 422);
+        }
+
+        $medicamento->decrement('stock', $data['cantidad']);
+        Log::info('Medicamento dispensado', ['id' => $id, 'cantidad' => $data['cantidad']]);
+
+        return response()->json($medicamento->load('categoria'), 200);
     }
 }

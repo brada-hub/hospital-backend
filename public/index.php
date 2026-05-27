@@ -1,5 +1,9 @@
 <?php
 
+// Desactivar advertencias de deprecación y salida directa de errores que rompen el JSON de la API
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+ini_set('display_errors', '0');
+
 use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));

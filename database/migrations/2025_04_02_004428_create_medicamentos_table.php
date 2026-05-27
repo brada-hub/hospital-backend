@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->string('descripcion');
+            $table->integer('stock')->default(0);
+            $table->integer('stock_critico')->default(10);
+            $table->string('estante')->nullable();
 
             $table->foreignId('categoria_id')->nullable()->constrained('medicamento_categorias');
             $table->timestamps();

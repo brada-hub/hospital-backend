@@ -194,7 +194,24 @@ class HospitalCompletoSeeder extends Seeder
                 $especialidad = $especialidades[0]; // Fallback a la primera especialidad
             }
 
-            // Crear paciente SIN usuario
+            // Crear usuario para el primer paciente para poder probar el portal
+            $userId = null;
+            if ($index === 0) {
+                $userPaciente = User::firstOrCreate(
+                    ['email' => 'paciente@hospital.com'],
+                    [
+                        'nombre' => $pData['nombre'],
+                        'apellidos' => $pData['apellidos'],
+                        'telefono' => $pData['telefono'],
+                        'password' => Hash::make('12345678'),
+                        'rol_id' => $this->pacienteRol->id,
+                        'hospital_id' => $this->hospital->id
+                    ]
+                );
+                $userId = $userPaciente->id;
+            }
+
+            // Crear paciente
             $paciente = Paciente::firstOrCreate(
                 ['ci' => $pData['ci']],
                 [
@@ -207,7 +224,7 @@ class HospitalCompletoSeeder extends Seeder
                     'nombre_referencia' => 'Familiar',
                     'apellidos_referencia' => $pData['apellidos'],
                     'celular_referencia' => '7' . rand(0000000, 9999999),
-                    // 'user_id' => null,  // ✅ SIN USUARIO
+                    'user_id' => $userId,  // ✅ VINCULADO SI ES DEMO
                     'estado' => true
                 ]
             );
