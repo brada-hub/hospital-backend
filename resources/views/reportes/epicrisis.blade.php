@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Epicrisis Clínica - {{ $internacion->paciente?->nombre ?? 'Paciente' }} {{ $internacion->paciente?->apellidos ?? '' }}</title>
     <style>
-        /* Aumentamos significativamente los márgenes físicos de impresión */
+        /* Diseño estrictamente minimalista, corporativo y monocromático */
         @page {
-            margin: 60pt 55pt 60pt 55pt;
+            margin: 55pt 50pt 60pt 50pt;
         }
         
-        /* Reset suave y controlado para evitar estiramientos brutales */
         body, h1, h2, h3, p, table, tr, td, th, ul, li { 
             margin: 0; 
             padding: 0; 
@@ -21,51 +20,51 @@
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
             font-size: 8.5pt; 
             line-height: 1.5; 
-            color: #1e293b;
+            color: #0f172a; /* Carbón oscuro puro */
             background-color: #ffffff;
         }
         
-        /* Header styling con excelente espaciado y márgenes */
+        /* Header minimalista sin fondo */
         .header-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 25px;
+            border-bottom: 1.5px solid #0f172a;
+            padding-bottom: 12px;
         }
         .header-logo-cell {
             width: 50%;
             vertical-align: top;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
         .header-title-cell {
             width: 50%;
             text-align: right;
             vertical-align: top;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
         .header-logo-text {
-            font-size: 22pt;
-            font-weight: 900;
-            color: #581c87; /* UNITEPC Purple */
-            letter-spacing: -1px;
-            margin-bottom: 5px;
-            display: inline-block;
+            font-size: 20pt;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
         }
         .header-subtitle {
-            font-size: 8pt;
-            color: #64748b;
-            margin-top: 4px;
+            font-size: 7.5pt;
+            color: #475569;
+            margin-top: 3px;
             line-height: 1.3;
         }
         .header-title {
-            font-size: 15pt;
+            font-size: 14pt;
             font-weight: 800;
-            color: #1e293b;
+            color: #0f172a;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 4px;
         }
 
-        /* Section styling */
+        /* Sección y Títulos sobrios */
         .section {
             margin-bottom: 22px;
             page-break-inside: avoid;
@@ -73,140 +72,101 @@
         .section-title {
             font-size: 9pt;
             font-weight: 800;
-            color: #581c87; /* UNITEPC Purple */
-            background-color: #faf5ff;
-            border-left: 4px solid #581c87;
-            padding: 5px 12px;
+            color: #0f172a;
+            border-bottom: 1px solid #0f172a;
+            padding-bottom: 3px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 10px;
         }
 
-        /* Discharge Highlight Box */
+        /* Caja de Alta estrictamente formal, en B&W */
         .discharge-summary-box {
-            background-color: #fdf2f8;
-            border: 1px solid #fbcfe8;
-            border-left: 4px solid #db2777;
+            background-color: #ffffff;
+            border: 1px solid #0f172a;
             padding: 12px 15px;
-            border-radius: 6px;
+            border-radius: 4px;
             margin-bottom: 22px;
             page-break-inside: avoid;
         }
-        .discharge-summary-box.alta-medica {
-            background-color: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-left: 4px solid #16a34a;
-        }
-        .discharge-summary-box.alta-solicitada {
-            background-color: #fffbeb;
-            border: 1px solid #fde68a;
-            border-left: 4px solid #d97706;
-        }
-        .discharge-summary-box.traslado {
-            background-color: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-left: 4px solid #2563eb;
-        }
-        .discharge-summary-box.fuga {
-            background-color: #faf5ff;
-            border: 1px solid #e9d5ff;
-            border-left: 4px solid #7c3aed;
-        }
         .discharge-title {
-            font-size: 10pt;
+            font-size: 9.5pt;
             font-weight: 800;
-            color: #9d174d;
+            color: #0f172a;
             margin-bottom: 5px;
             text-transform: uppercase;
+            letter-spacing: 0.2px;
         }
-        .discharge-summary-box.alta-medica .discharge-title { color: #15803d; }
-        .discharge-summary-box.alta-solicitada .discharge-title { color: #b45309; }
-        .discharge-summary-box.traslado .discharge-title { color: #1d4ed8; }
-        .discharge-summary-box.fuga .discharge-title { color: #6d28d9; }
-
         .discharge-details {
             font-size: 8.5pt;
-            color: #334155;
+            color: #1e293b;
             line-height: 1.45;
         }
 
-        /* Clinical Vitals / Treatment Tables */
+        /* Tablas Clínicas ultra-limpias, B&W */
         .clinical-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 6px;
         }
         .clinical-table th {
-            background-color: #581c87; /* UNITEPC Purple */
-            color: #ffffff;
+            background-color: #ffffff;
+            color: #0f172a;
             font-size: 8pt;
             font-weight: 700;
-            padding: 7px 10px;
+            padding: 6px 8px;
             text-align: left;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border: 1px solid #581c87;
+            border-top: 1.5px solid #0f172a;
+            border-bottom: 1.5px solid #0f172a;
         }
         .clinical-table td {
-            padding: 7px 10px;
-            border: 1px solid #e2e8f0;
+            padding: 6px 8px;
+            border-bottom: 1px solid #e2e8f0;
             font-size: 8pt;
-            vertical-align: middle;
-            color: #334155;
+            vertical-align: top;
+            color: #1e293b;
         }
-        .clinical-table tr:nth-child(even) {
+        .clinical-table tr.low-adherencia-row td {
             background-color: #f8fafc;
+            border-left: 2.5px solid #0f172a;
         }
 
-        /* Custom badge */
-        .badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 7.5pt;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-        .badge-success { background-color: #dcfce7; color: #166534; }
-        .badge-warning { background-color: #fef3c7; color: #92400e; }
-        .badge-danger { background-color: #fee2e2; color: #991b1b; }
-        .badge-info { background-color: #dbeafe; color: #1e40af; }
-
-        /* Timeline and Logs */
+        /* Bloque de Notas */
         .timeline-item {
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             padding: 8px 12px;
-            background-color: #f8fafc;
-            border-left: 3px solid #64748b;
-            border-radius: 0 6px 6px 0;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-left: 3px solid #0f172a;
+            border-radius: 4px;
             page-break-inside: avoid;
-        }
-        .timeline-item.medica {
-            border-left-color: #581c87; /* UNITEPC Purple */
-            background-color: #faf5ff;
         }
         .timeline-header {
             font-size: 8pt;
             font-weight: 700;
-            color: #475569;
-            margin-bottom: 3px;
+            color: #0f172a;
+            margin-bottom: 4px;
         }
         .timeline-author {
-            color: #581c87;
-            font-weight: 600;
+            color: #0f172a;
+            font-weight: 700;
         }
         .timeline-date {
             font-family: monospace;
-            color: #64748b;
+            color: #475569;
             float: right;
+            font-weight: normal;
         }
         .timeline-content {
             font-size: 8pt;
-            color: #0f172a;
+            color: #334155;
             white-space: pre-wrap;
             line-height: 1.4;
         }
 
+        /* Footer minimalista fijo */
         .footer {
             position: fixed;
             bottom: -35px;
@@ -214,7 +174,7 @@
             right: 0;
             text-align: center;
             font-size: 7.5pt;
-            color: #94a3b8;
+            color: #64748b;
             border-top: 1px solid #e2e8f0;
             padding-top: 8px;
             font-family: Arial, sans-serif;
@@ -224,18 +184,17 @@
 <body>
     <!-- FIXED FOOTER -->
     <div class="footer">
-        Este informe de epicrisis clínica constituye un documento médico-legal. Generado automáticamente a través de la plataforma de salud SSTEPI.
+        DOCUMENTO CLÍNICO DE CARÁCTER LEGAL &bull; HISTORIAL EXPEDIENTE SSTEPI &bull; VALIDEZ INSTITUCIONAL UNITEPC
         <br />
-        ID Internación: {{ $internacion->id }} &bull; Paciente CI: {{ $internacion->paciente?->ci ?? 'N/A' }} &bull; UNITEPC SSTEPI &copy; 2026
+        ID Internación: {{ $internacion->id }} &bull; Paciente CI: {{ $internacion->paciente?->ci ?? 'N/A' }} &bull; SSTEPI &copy; 2026
     </div>
 
-    <!-- HEADER -->
+    <!-- HEADER MINIMALISTA -->
     <table class="header-table">
         <tr>
             <td class="header-logo-cell">
                 @if(isset($logoBase64) && $logoBase64)
-                    <!-- Incrementamos el tamaño del logotipo y añadimos márgenes -->
-                    <img src="{{ $logoBase64 }}" alt="Logo SSTEPI" style="height: 70px; margin-bottom: 6px; object-fit: contain;">
+                    <img src="{{ $logoBase64 }}" alt="Logo SSTEPI" style="height: 60px; margin-bottom: 4px; object-fit: contain; filter: grayscale(100%);">
                 @else
                     <span class="header-logo-text">UNITEPC</span>
                 @endif
@@ -243,72 +202,67 @@
             </td>
             <td class="header-title-cell">
                 <h1 class="header-title">Epicrisis y Resumen de Alta</h1>
-                <div class="header-subtitle" style="font-weight: bold; color: #475569;">
+                <div class="header-subtitle" style="font-weight: bold; color: #0f172a;">
                     Establecimiento: {{ $internacion->medico?->hospital?->nombre ?? 'Clínica Universitaria UNITEPC' }}
                 </div>
-                <div class="header-subtitle">Generado el {{ $fechaGeneracion }}</div>
+                <div class="header-subtitle">Fecha de Emisión: {{ $fechaGeneracion }}</div>
             </td>
         </tr>
     </table>
 
-    <!-- ESTADO DEL ALTA MÉDICA (Green/Orange/Pink Alert Box) -->
+    <!-- ESTADO DEL ALTA MÉDICA (Monocromático, sobrio) -->
     @php
         $tipoAlta = $internacion->tipo_alta;
         if (!$internacion->fecha_alta) {
             $tipoAlta = 'Hospitalización en Curso (Activo)';
-            $styleClass = 'traslado';
         } else {
             $tipoAlta = $tipoAlta ?? 'Alta Médica';
-            $styleClass = 'alta-medica';
-            if (strpos(strtolower($tipoAlta), 'solicitada') !== false || strpos(strtolower($tipoAlta), 'voluntario') !== false) {
-                $styleClass = 'alta-solicitada';
-            } elseif (strpos(strtolower($tipoAlta), 'traslado') !== false || strpos(strtolower($tipoAlta), 'deriv') !== false) {
-                $styleClass = 'traslado';
-            } elseif (strpos(strtolower($tipoAlta), 'fallecimiento') !== false || strpos(strtolower($tipoAlta), 'defunc') !== false) {
-                $styleClass = 'alta-fallecimiento';
-            } elseif (strpos(strtolower($tipoAlta), 'fuga') !== false || strpos(strtolower($tipoAlta), 'abandono') !== false) {
-                $styleClass = 'fuga';
-            }
         }
     @endphp
     
-    <div class="discharge-summary-box {{ $styleClass }}">
+    <div class="discharge-summary-box">
         <div class="discharge-title">
-            REGISTRO OFICIAL DE EGRESO HOSPITALARIO: {{ $tipoAlta }}
+            DOCUMENTO CLÍNICO DE EGRESO HOSPITALARIO: {{ $tipoAlta }}
         </div>
         <div class="discharge-details">
             @if($internacion->fecha_alta)
-                <strong>Fecha y Hora de Alta:</strong> 
+                <strong>Fecha y Hora Oficial de Alta:</strong> 
                 {{ \Carbon\Carbon::parse($internacion->fecha_alta)->format('d/m/Y H:i:s') }}
                 <br />
-                <strong>Detalles Clínicos / Administrativos de Egreso:</strong> 
+                <strong>Observaciones Médicas de Alta:</strong> 
                 {{ $internacion->observaciones_alta ?? 'Egresado sin observaciones particulares de alta.' }}
             @else
-                <strong>Estado de Estadía:</strong> El paciente se encuentra actualmente en curso de hospitalización clínica. No se registran observaciones de egreso clínico.
+                <strong>Estado Actual de Estadía:</strong> El paciente se encuentra bajo hospitalización activa y control clínico continuo. No se registra egreso clínico formal a la fecha de emisión.
             @endif
         </div>
     </div>
 
-    <!-- BLOQUES DE IDENTIFICACIÓN PARALELOS (Purple vs Turquoise - Sin Divisores Crudos '|' y Sin Emojis rotos '??') -->
+    <!-- EVITAR DUPLICADO "DR. DR." -->
+    @php
+        $medicoNombre = $internacion->medico ? ($internacion->medico->nombre . ' ' . $internacion->medico->apellidos) : 'Carlos Vegas';
+        $medicoNombreClean = preg_replace('/^(Dr\.|Dra\.|Dr|Dra)\s+/i', '', $medicoNombre);
+    @endphp
+
+    <!-- BLOQUES DE IDENTIFICACIÓN PARALELOS (Tablas limpias sin fondo, sin '|', con bordes mínimos) -->
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 22px;">
         <tr>
-            <!-- LEFT CARD: DEMOGRAPHICS (Purple theme) -->
-            <td style="width: 49%; vertical-align: top; background-color: #faf5ff; border: 1px solid #e9d5ff; border-left: 5px solid #581c87; border-radius: 6px; padding: 12px;">
-                <h3 style="color: #581c87; font-size: 9pt; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    PACIENTE - INFORMACIÓN DEMOGRÁFICA
+            <!-- COLUMNA IZQUIERDA: DATOS PACIENTE -->
+            <td style="width: 48%; vertical-align: top; border: 1px solid #cbd5e1; border-top: 3px solid #0f172a; padding: 12px; border-radius: 4px;">
+                <h3 style="color: #0f172a; font-size: 8.5pt; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Información Demográfica del Paciente
                 </h3>
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #6b21a8; width: 35%;">Nombre:</td>
-                        <td style="padding: 4px 0; font-size: 8pt; font-weight: bold; color: #1e293b;">{{ $internacion->paciente?->nombre ?? 'N/A' }} {{ $internacion->paciente?->apellidos ?? '' }}</td>
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569; width: 35%;">Nombre Completo:</td>
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: bold; color: #0f172a;">{{ $internacion->paciente?->nombre ?? 'N/A' }} {{ $internacion->paciente?->apellidos ?? '' }}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #6b21a8;">Cédula (CI):</td>
-                        <td style="padding: 4px 0; font-size: 8pt; font-family: monospace; color: #1e293b;">{{ $internacion->paciente?->ci ?? 'N/A' }}</td>
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569;">Documento (CI):</td>
+                        <td style="padding: 4px 0; font-size: 8pt; font-family: monospace; color: #0f172a;">{{ $internacion->paciente?->ci ?? 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #6b21a8;">F. Nacimiento:</td>
-                        <td style="padding: 4px 0; font-size: 8pt; color: #1e293b;">
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569;">F. Nacimiento:</td>
+                        <td style="padding: 4px 0; font-size: 8pt; color: #0f172a;">
                             @if($internacion->paciente?->fecha_nacimiento)
                                 {{ \Carbon\Carbon::parse($internacion->paciente->fecha_nacimiento)->format('d/m/Y') }} 
                                 ({{ \Carbon\Carbon::parse($internacion->paciente->fecha_nacimiento)->age }} años)
@@ -318,108 +272,142 @@
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #6b21a8;">Género:</td>
-                        <td style="padding: 4px 0; font-size: 8pt; color: #1e293b;">
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569;">Sexo / Género:</td>
+                        <td style="padding: 4px 0; font-size: 8pt; color: #0f172a;">
                             @php $sexo = $internacion->paciente?->sexo ?? $internacion->paciente?->genero ?? 'N/A'; @endphp
                             {{ $sexo === 'M' ? 'Masculino' : ($sexo === 'F' ? 'Femenino' : $sexo) }}
                         </td>
                     </tr>
+                    <tr>
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569;">Teléfono:</td>
+                        <td style="padding: 4px 0; font-size: 8pt; color: #0f172a;">{{ $internacion->paciente?->telefono ?? 'No registrado' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569; vertical-align: top;">Dirección:</td>
+                        <td style="padding: 4px 0; font-size: 8pt; color: #0f172a;">{{ $internacion->paciente?->direccion ?? 'No registrada' }}</td>
+                    </tr>
                 </table>
             </td>
-            <!-- SPACING COLUMN -->
-            <td style="width: 2%;"></td>
-            <!-- RIGHT CARD: STAY & ADMISSION (Turquoise theme) -->
-            <td style="width: 49%; vertical-align: top; background-color: #f0fdfa; border: 1px solid #ccfbf1; border-left: 5px solid #0d9488; border-radius: 6px; padding: 12px;">
-                <h3 style="color: #0d9488; font-size: 9pt; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    ESTADÍA E INGRESO CLÍNICO
+            <!-- ESPACIO -->
+            <td style="width: 4%;"></td>
+            <!-- COLUMNA DERECHA: DATOS INTERNACIÓN -->
+            <td style="width: 48%; vertical-align: top; border: 1px solid #cbd5e1; border-top: 3px solid #0f172a; padding: 12px; border-radius: 4px;">
+                <h3 style="color: #0f172a; font-size: 8.5pt; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Resumen de Estadía Hospitalaria
                 </h3>
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #0f766e; width: 35%;">F. Ingreso:</td>
-                        <td style="padding: 4px 0; font-size: 8pt; font-family: monospace; color: #1e293b;">{{ \Carbon\Carbon::parse($internacion->fecha_ingreso)->format('d/m/Y H:i') }}</td>
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569; width: 35%;">Fecha Ingreso:</td>
+                        <td style="padding: 4px 0; font-size: 8pt; font-family: monospace; color: #0f172a;">{{ \Carbon\Carbon::parse($internacion->fecha_ingreso)->format('d/m/Y H:i') }}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #0f766e;">F. Egreso:</td>
-                        <td style="padding: 4px 0; font-size: 8pt; font-family: monospace; color: #1e293b;">{{ $internacion->fecha_alta ? \Carbon\Carbon::parse($internacion->fecha_alta)->format('d/m/Y H:i') : 'Hospitalización en Curso' }}</td>
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569;">Fecha Egreso:</td>
+                        <td style="padding: 4px 0; font-size: 8pt; font-family: monospace; color: #0f172a;">{{ $internacion->fecha_alta ? \Carbon\Carbon::parse($internacion->fecha_alta)->format('d/m/Y H:i') : 'N/A (Activo)' }}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #0f766e;">Médico:</td>
-                        <td style="padding: 4px 0; font-size: 8pt; color: #1e293b;">Dr. {{ $internacion->medico?->nombre ?? 'Carlos' }} {{ $internacion->medico?->apellidos ?? 'Vegas' }}</td>
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569;">Estancia Total:</td>
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: bold; color: #0f172a;">{{ number_format($diasEstancia, 1) }} días transcurridos</td>
                     </tr>
                     <tr>
-                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #0f766e;">Ubicación:</td>
-                        <td style="padding: 4px 0; font-size: 8pt; color: #1e293b;">
-                            {{ $ocupacion?->cama?->sala?->nombre ?? 'Sala General' }} / Cama {{ $ocupacion?->cama?->nombre ?? 'S/N' }}
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569;">Médico Tratante:</td>
+                        <td style="padding: 4px 0; font-size: 8pt; color: #0f172a;">Dr. {{ $medicoNombreClean }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569;">Ubicación:</td>
+                        <td style="padding: 4px 0; font-size: 8pt; color: #0f172a;">
+                            {{ $ocupacion?->cama?->sala?->nombre ?? 'N/A' }} &mdash; Cama {{ $ocupacion?->cama?->nombre ?? $ocupacion?->cama?->codigo ?? 'S/C' }}
                         </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0; font-size: 8pt; font-weight: 700; color: #475569;">Especialidad:</td>
+                        <td style="padding: 4px 0; font-size: 8pt; color: #0f172a;">{{ $ocupacion?->cama?->sala?->especialidad?->nombre ?? 'Medicina General' }}</td>
                     </tr>
                 </table>
             </td>
         </tr>
     </table>
 
+    <!-- METER TODA LA INFORMACIÓN POSIBLE: CONTACTO DE EMERGENCIA -->
+    <div class="section">
+        <div class="section-title">Contacto de Emergencia / Familiar Responsable</div>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 4px; padding: 10px;">
+            <tr>
+                <td style="padding: 5px 8px; font-size: 8pt; font-weight: 700; color: #475569; width: 25%;">Familiar de Contacto:</td>
+                <td style="padding: 5px 8px; font-size: 8pt; color: #0f172a; width: 25%;">{{ $internacion->paciente?->nombre_referencia ?? 'No' }} {{ $internacion->paciente?->apellidos_referencia ?? 'registrado' }}</td>
+                <td style="padding: 5px 8px; font-size: 8pt; font-weight: 700; color: #475569; width: 25%;">Teléfono de Contacto:</td>
+                <td style="padding: 5px 8px; font-size: 8pt; color: #0f172a; width: 25%;">{{ $internacion->paciente?->celular_referencia ?? 'No registrado' }}</td>
+            </tr>
+        </table>
+    </div>
+
     <!-- DIAGNÓSTICO & MOTIVO -->
     <div class="section">
-        <div class="section-title">Diagnóstico de Ingreso</div>
-        <table style="width: 100%; border-collapse: collapse; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;">
+        <div class="section-title">Diagnóstico y Justificación Médica de Ingreso</div>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px;">
             <tr>
-                <td style="padding: 6px 10px; font-size: 8pt; font-weight: 700; color: #475569; width: 22%;">Motivo de Internación:</td>
-                <td style="padding: 6px 10px; font-size: 8pt; color: #1e293b; width: 78%;">{{ $internacion->motivo ?? 'N/A' }}</td>
+                <td style="padding: 6px 10px; font-size: 8pt; font-weight: 700; color: #475569; width: 20%; vertical-align: top;">Motivo Clínico:</td>
+                <td style="padding: 6px 10px; font-size: 8pt; color: #0f172a; width: 80%;">{{ $internacion->motivo ?? 'N/A' }}</td>
             </tr>
             <tr>
-                <td style="padding: 6px 10px; font-size: 8pt; font-weight: 700; color: #475569; border-top: 1px solid #e2e8f0;">Diagnóstico Principal:</td>
-                <td style="padding: 6px 10px; font-size: 8pt; font-weight: bold; color: #1e293b; border-top: 1px solid #e2e8f0;">{{ $internacion->diagnostico ?? 'N/A' }}</td>
+                <td style="padding: 6px 10px; font-size: 8pt; font-weight: 700; color: #475569; border-top: 1px solid #e2e8f0; vertical-align: top;">Diagnóstico Principal:</td>
+                <td style="padding: 6px 10px; font-size: 8pt; font-weight: bold; color: #0f172a; border-top: 1px solid #e2e8f0;">{{ $internacion->diagnostico ?? 'N/A' }}</td>
             </tr>
+            @if($internacion->observaciones)
+                <tr>
+                    <td style="padding: 6px 10px; font-size: 8pt; font-weight: 700; color: #475569; border-top: 1px solid #e2e8f0; vertical-align: top;">Notas de Admisión:</td>
+                    <td style="padding: 6px 10px; font-size: 8pt; color: #334155; border-top: 1px solid #e2e8f0; font-style: italic;">{{ $internacion->observaciones }}</td>
+                </tr>
+            @endif
         </table>
     </div>
 
     <!-- ANTROPOMETRÍA -->
     <div class="section">
-        <div class="section-title">Evaluación Antropométrica</div>
+        <div class="section-title">Evaluación de Biometría y Antropometría</div>
         @if($internacion->antropometria)
             <table class="clinical-table">
                 <thead>
                     <tr>
-                        <th style="width: 33.3%;">Peso Registrado</th>
-                        <th style="width: 33.3%;">Altura Registrada</th>
+                        <th style="width: 33.3%;">Peso Corporal</th>
+                        <th style="width: 33.3%;">Talla / Altura</th>
                         <th style="width: 33.3%;">Índice de Masa Corporal (IMC)</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="font-weight: bold; font-size: 8.5pt;">{{ $internacion->antropometria->peso }} kg</td>
-                        <td style="font-weight: bold; font-size: 8.5pt;">{{ $internacion->antropometria->altura }} cm</td>
-                        <td style="font-weight: bold; font-size: 8.5pt; color: #0d9488;">
+                        <td style="font-weight: bold;">{{ $internacion->antropometria->peso }} kg</td>
+                        <td style="font-weight: bold;">{{ $internacion->antropometria->altura }} cm</td>
+                        <td style="font-weight: bold;">
                             {{ $internacion->antropometria->imc }}
                             @if($internacion->antropometria->imc)
                                 @php
                                     $imc = $internacion->antropometria->imc;
                                     $desc = 'Normal';
-                                    $c = 'badge-success';
-                                    if ($imc < 18.5) { $desc = 'Bajo Peso'; $c = 'badge-warning'; }
-                                    elseif ($imc >= 25 && $imc < 30) { $desc = 'Sobrepeso'; $c = 'badge-warning'; }
-                                    elseif ($imc >= 30) { $desc = 'Obesidad'; $c = 'badge-danger'; }
+                                    if ($imc < 18.5) { $desc = 'Bajo Peso'; }
+                                    elseif ($imc >= 25 && $imc < 30) { $desc = 'Sobrepeso'; }
+                                    elseif ($imc >= 30) { $desc = 'Obesidad'; }
                                 @endphp
-                                <span class="badge {{ $c }}">{{ $desc }}</span>
+                                &mdash; [{{ $desc }}]
                             @endif
                         </td>
                     </tr>
                 </tbody>
             </table>
             @if($internacion->antropometria->observaciones)
-                <p style="font-size: 7.5pt; color: #64748b; font-style: italic; margin-top: 4px;">
-                    * Observación Antropométrica: "{{ $internacion->antropometria->observaciones }}"
+                <p style="font-size: 7.5pt; color: #475569; font-style: italic; margin-top: 4px;">
+                    Nota Antropométrica: "{{ $internacion->antropometria->observaciones }}"
                 </p>
             @endif
         @else
-            <p style="padding: 6px 10px; background-color: #f8fafc; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #e2e8f0; border-radius: 4px;">
-                No se registraron datos antropométricos específicos para este expediente.
+            <p style="padding: 6px 10px; background-color: #ffffff; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #cbd5e1; border-radius: 4px;">
+                No se registraron datos antropométricos específicos para esta internación.
             </p>
         @endif
     </div>
 
     <!-- HISTORIAL COMPLETO DE SIGNOS VITALES -->
     <div class="section">
-        <div class="section-title">Historial Clínico Cronológico de Signos Vitales</div>
+        <div class="section-title">Historial Cronológico de Control de Signos Vitales</div>
         @if(count($historialControles) > 0)
             <table class="clinical-table">
                 <thead>
@@ -491,7 +479,7 @@
                             <td>
                                 {{ $control->user ? $control->user->nombre . ' ' . substr($control->user->apellidos, 0, 1) . '.' : 'Turno Clínico' }}
                                 @if($control->observaciones)
-                                    <div style="font-size: 7pt; color: #64748b; font-style: italic;">
+                                    <div style="font-size: 7pt; color: #475569; font-style: italic;">
                                         Nota: "{{ $control->observaciones }}"
                                     </div>
                                 @endif
@@ -501,24 +489,24 @@
                 </tbody>
             </table>
         @else
-            <p style="padding: 6px 10px; background-color: #f8fafc; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #e2e8f0; border-radius: 4px;">
+            <p style="padding: 6px 10px; background-color: #ffffff; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #cbd5e1; border-radius: 4px;">
                 No se registraron signos vitales durante el curso clínico de internación.
             </p>
         @endif
     </div>
 
-    <!-- TRATAMIENTO FARMACOLÓGICO & ALERTA DE ADHERENCIA -->
+    <!-- TRATAMIENTO FARMACOLÓGICO - MINIMALISTA, B&W CON ALERTA SOBRIA -->
     <div class="section">
-        <div class="section-title">Tratamientos Farmacológicos & Adherencia</div>
+        <div class="section-title">Tratamientos Farmacológicos e Historial de Adherencia</div>
         @if(count($resumenMedicamentos) > 0)
             <table class="clinical-table">
                 <thead>
                     <tr>
                         <th style="width: 32%;">Medicamento</th>
                         <th style="width: 14%;">Dosis</th>
-                        <th style="width: 14%;">Vía</th>
+                        <th style="width: 14%;">Vía Adm.</th>
                         <th style="width: 20%;">Frecuencia / Duración</th>
-                        <th style="width: 20%;">Tasa de Adherencia</th>
+                        <th style="width: 20%;">Adherencia al Tratamiento</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -526,25 +514,22 @@
                         @php
                             $ad = $med['adherencia'];
                             $isLowAdherencia = $ad < 60;
-                            $rowStyle = $isLowAdherencia ? 'background-color: #fffbeb;' : '';
-                            $bc = 'badge-success';
-                            if ($ad < 50) $bc = 'badge-danger';
-                            elseif ($ad < 80) $bc = 'badge-warning';
+                            $rowStyle = $isLowAdherencia ? 'background-color: #f8fafc;' : '';
                         @endphp
                         <tr style="{{ $rowStyle }}">
-                            <td style="font-weight: bold; color: #1e293b;">
+                            <td style="font-weight: bold;">
                                 {{ $med['medicamento'] }}
                                 @if($isLowAdherencia)
-                                    <span style="display: block; font-size: 6.5pt; color: #b45309; font-weight: bold; margin-top: 1px;">Alerta de Baja Adherencia</span>
+                                    <span style="display: block; font-size: 7pt; font-weight: bold; color: #0f172a; margin-top: 1px;">[ALERTA: BAJA ADHERENCIA]</span>
                                 @endif
                             </td>
-                            <td style="font-weight: 500;">{{ $med['dosis'] }}</td>
+                            <td>{{ $med['dosis'] }}</td>
                             <td>{{ $med['via'] }}</td>
-                            <td>{{ $med['frecuencia'] }} <br /><span style="font-size: 7pt; color: #64748b;">durante {{ $med['duracion'] }}</span></td>
+                            <td>{{ $med['frecuencia'] }} <br /><span style="font-size: 7pt; color: #475569;">durante {{ $med['duracion'] }}</span></td>
                             <td>
-                                <span class="badge {{ $bc }}">{{ $ad }}%</span>
-                                <div style="font-size: 7pt; color: #64748b; margin-top: 1px;">
-                                    Dosis: <strong>{{ $med['dosis_administradas'] }}</strong> de {{ $med['total_dosis'] }}
+                                <strong>{{ $ad }}%</strong>
+                                <div style="font-size: 7pt; color: #475569; margin-top: 1px;">
+                                    {{ $med['dosis_administradas'] }} de {{ $med['total_dosis'] }} aplicadas
                                 </div>
                             </td>
                         </tr>
@@ -552,7 +537,7 @@
                 </tbody>
             </table>
         @else
-            <p style="padding: 6px 10px; background-color: #f8fafc; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #e2e8f0; border-radius: 4px;">
+            <p style="padding: 6px 10px; background-color: #ffffff; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #cbd5e1; border-radius: 4px;">
                 No se prescribieron tratamientos farmacológicos específicos en esta internación.
             </p>
         @endif
@@ -560,14 +545,14 @@
 
     <!-- PLAN ALIMENTICIO -->
     <div class="section">
-        <div class="section-title">Nutrición y Regímenes Dietéticos</div>
+        <div class="section-title">Regímenes Dietéticos y Soporte Nutricional</div>
         @if(count($resumenAlimentacion) > 0)
             <table class="clinical-table">
                 <thead>
                     <tr>
-                        <th style="width: 30%;">Tipo de Dieta Prescrita</th>
+                        <th style="width: 32%;">Tipo de Dieta Prescrita</th>
                         <th style="width: 15%;">Vía</th>
-                        <th style="width: 25%;">Período de Aplicación</th>
+                        <th style="width: 23%;">Período de Aplicación</th>
                         <th style="width: 15%;">Consumo Promedio</th>
                         <th style="width: 15%;">Estado Final</th>
                     </tr>
@@ -575,66 +560,50 @@
                 <tbody>
                     @foreach($resumenAlimentacion as $alim)
                         <tr>
-                            <td style="font-weight: bold; color: #1e293b;">{{ $alim['tipo_dieta'] }}</td>
+                            <td style="font-weight: bold;">{{ $alim['tipo_dieta'] }}</td>
                             <td>{{ $alim['via'] }}</td>
-                            <td style="font-family: monospace;">{{ $alim['fecha_inicio'] }} — {{ $alim['fecha_fin'] }}</td>
-                            <td style="font-weight: bold; color: #0d9488;">{{ $alim['consumo_promedio'] }}</td>
-                            <td>
-                                @php
-                                    $est = strtolower($alim['estado']);
-                                    $bad = 'badge-info';
-                                    if ($est === 'activa') $bad = 'badge-success';
-                                    elseif ($est === 'suspendida') $bad = 'badge-danger';
-                                @endphp
-                                <span class="badge {{ $bad }}">{{ $alim['estado'] }}</span>
-                            </td>
+                            <td style="font-family: monospace;">{{ $alim['fecha_inicio'] }} &mdash; {{ $alim['fecha_fin'] }}</td>
+                            <td><strong>{{ $alim['consumo_promedio'] }}</strong></td>
+                            <td><strong>[{{ $alim['estado'] }}]</strong></td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         @else
-            <p style="padding: 6px 10px; background-color: #f8fafc; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #e2e8f0; border-radius: 4px;">
+            <p style="padding: 6px 10px; background-color: #ffffff; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #cbd5e1; border-radius: 4px;">
                 No se registraron regímenes de nutrición en esta internación.
             </p>
         @endif
     </div>
 
-    <!-- PLANES DE CUIDADOS Y APLICACIONES (NURSING LOGS - EXECUTIVE CONSOLIDATION) -->
+    <!-- PLANES DE CUIDADOS Y APLICACIONES (NURSING LOGS - EXECUTIVE CONSOLIDATION B&W) -->
     <div class="section" style="page-break-before: always;">
-        <div class="section-title">Resumen Ejecutivo de Cuidados de Enfermería</div>
+        <div class="section-title">Resumen Ejecutivo de Ejecución de Cuidados de Enfermería</div>
         @if(count($resumenCuidados) > 0)
             <table class="clinical-table">
                 <thead>
                     <tr>
-                        <th style="width: 32%;">Directriz de Enfermería</th>
-                        <th style="width: 43%;">Indicaciones Clínicas / Frecuencia</th>
+                        <th style="width: 30%;">Directriz de Enfermería</th>
+                        <th style="width: 45%;">Detalles de la Indicación / Frecuencia</th>
                         <th style="width: 25%; text-align: right;">Cumplimiento Operativo</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($resumenCuidados as $cuidado)
-                        @php
-                            $cum = $cuidado['cumplimiento'];
-                            $badgeColor = 'badge-success';
-                            if ($cum < 50) $badgeColor = 'badge-danger';
-                            elseif ($cum < 80) $badgeColor = 'badge-warning';
-                        @endphp
                         <tr>
-                            <td style="font-weight: bold; color: #581c87; font-size: 8pt;">
+                            <td style="font-weight: bold; color: #0f172a;">
                                 {{ $cuidado['directriz'] }}
                             </td>
                             <td>
-                                <ul style="margin: 0; padding-left: 12px; font-size: 7.5pt; color: #475569;">
+                                <ul style="margin: 0; padding-left: 12px; font-size: 7.5pt; color: #334155;">
                                     @foreach($cuidado['descripciones'] as $desc)
                                         <li>{{ $desc }}</li>
                                     @endforeach
                                 </ul>
                             </td>
                             <td style="text-align: right; vertical-align: middle;">
-                                <span class="badge {{ $badgeColor }}" style="font-size: 7.5pt; padding: 2px 5px;">
-                                    {{ $cum }}% de cumplimiento
-                                </span>
-                                <div style="font-size: 7pt; color: #64748b; margin-top: 2px;">
+                                <strong>[{{ $cuidado['cumplimiento'] }}% de cumplimiento]</strong>
+                                <div style="font-size: 7pt; color: #475569; margin-top: 2px;">
                                     {{ $cuidado['total_aplicadas'] }} de {{ $cuidado['total_esperadas'] }} ejecuciones
                                 </div>
                             </td>
@@ -643,7 +612,7 @@
                 </tbody>
             </table>
         @else
-            <p style="padding: 6px 10px; background-color: #f8fafc; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #e2e8f0; border-radius: 4px;">
+            <p style="padding: 6px 10px; background-color: #ffffff; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #cbd5e1; border-radius: 4px;">
                 No se registraron directrices de enfermería en esta internación.
             </p>
         @endif
@@ -651,13 +620,13 @@
 
     <!-- NOTAS DE EVOLUCIÓN CLÍNICA (MÉDICAS) -->
     <div class="section">
-        <div class="section-title">Bitácora Médica: Notas de Evolución</div>
+        <div class="section-title">Bitácora Médica de Evolución Clínica</div>
         @if($evolucionClinica->count() > 0)
             <div style="margin-top: 4px;">
                 @foreach($evolucionClinica as $control)
                     <div class="timeline-item medica">
                         <div class="timeline-header">
-                            <span class="timeline-author">Dr(a). {{ $control->user?->nombre ?? 'Carlos' }} {{ $control->user?->apellidos ?? 'Vegas' }}</span>
+                            <span class="timeline-author">Dr. {{ preg_replace('/^(Dr\.|Dra\.|Dr|Dra)\s+/i', '', ($control->user ? ($control->user->nombre . ' ' . $control->user->apellidos) : 'Carlos Vegas')) }}</span>
                             <span class="timeline-date">{{ \Carbon\Carbon::parse($control->fecha_control)->format('d/m/Y H:i') }}</span>
                         </div>
                         <div class="timeline-content">{{ $control->observaciones ?? 'Sin descripción añadida.' }}</div>
@@ -665,28 +634,28 @@
                 @endforeach
             </div>
         @else
-            <p style="padding: 6px 10px; background-color: #f8fafc; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #e2e8f0; border-radius: 4px;">
+            <p style="padding: 6px 10px; background-color: #ffffff; font-size: 8pt; color: #64748b; font-style: italic; border: 1px solid #cbd5e1; border-radius: 4px;">
                 No se registraron notas de evolución médica formales en el expediente de internación.
             </p>
         @endif
     </div>
 
-    <!-- SECCIÓN DE FIRMAS Y TIMBRES -->
-    <div class="section" style="margin-top: 50px; page-break-inside: avoid;">
+    <!-- SECCIÓN DE FIRMAS Y VALIDACIÓN CLÍNICO-LEGAL -->
+    <div class="section" style="margin-top: 60px; page-break-inside: avoid;">
         <table style="width: 100%; border-collapse: collapse;">
             <tr>
                 <td style="width: 45%; text-align: center; vertical-align: bottom; padding: 10px;">
-                    <div style="width: 80%; margin: 0 auto 5px auto; border-top: 1px solid #94a3b8;"></div>
-                    <div style="font-size: 8.5pt; font-weight: 700; color: #475569;">Dr. Carlos Vegas</div>
-                    <div style="font-size: 7.5pt; color: #64748b;">Médico Tratante / Especialista Responsable</div>
+                    <div style="width: 80%; margin: 0 auto 5px auto; border-top: 1px solid #0f172a;"></div>
+                    <div style="font-size: 8.5pt; font-weight: 700; color: #0f172a;">Dr. Carlos Vegas</div>
+                    <div style="font-size: 7.5pt; color: #475569;">Médico Tratante / Especialista Responsable</div>
                     <div style="font-size: 7pt; color: #94a3b8; font-style: italic;">Firma y Sello Profesional</div>
                 </td>
                 <td style="width: 10%;"></td>
                 <td style="width: 45%; text-align: center; vertical-align: bottom; padding: 10px;">
-                    <div style="width: 80%; margin: 0 auto 5px auto; border-top: 1px solid #94a3b8;"></div>
-                    <div style="font-size: 8.5pt; font-weight: 700; color: #475569;">Supervisión de Enfermería</div>
-                    <div style="font-size: 7.5pt; color: #64748b;">Validación y Control de Turno Clínico</div>
-                    <div style="font-size: 7pt; color: #94a3b8; font-style: italic;">UNITEPC - Estación de Enfermería</div>
+                    <div style="width: 80%; margin: 0 auto 5px auto; border-top: 1px solid #0f172a;"></div>
+                    <div style="font-size: 8.5pt; font-weight: 700; color: #0f172a;">Supervisión de Enfermería</div>
+                    <div style="font-size: 7.5pt; color: #475569;">Validación y Control de Turno Clínico</div>
+                    <div style="font-size: 7pt; color: #94a3b8; font-style: italic;">Estación de Enfermería - UNITEPC</div>
                 </td>
             </tr>
         </table>
