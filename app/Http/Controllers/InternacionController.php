@@ -144,14 +144,39 @@ class InternacionController extends Controller
     }
 
     /**
-     * 👩‍⚕️ Pacientes activos del médico autenticado.
+     * 👩‍⚕️ Pacientes activos del médico o censo general para nutrición/enfermería/admin.
      */
     public function getMisPacientes()
     {
-        $medicoId = Auth::id();
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([], 401);
+        }
 
+        // Asegurar que la relación 'rol' esté cargada
+        if (!$user->relationLoaded('rol')) {
+            $user->load('rol');
+        }
+
+        $rolNombre = strtolower($user->rol->nombre ?? '');
+
+        // Nutricionistas, enfermeros y administradores ven todo el censo activo del hospital
+        if (
+            strpos($rolNombre, 'nutri') !== false || 
+            strpos($rolNombre, 'enfermer') !== false || 
+            strpos($rolNombre, 'admin') !== false
+        ) {
+            return response()->json(
+                Internacion::activas()
+                    ->with(['paciente', 'ocupacionActiva.cama.sala'])
+                    ->latest('fecha_ingreso')
+                    ->get()
+            );
+        }
+
+        // Médicos de cabecera solo ven pacientes bajo su responsabilidad médica directa
         return response()->json(
-            Internacion::delMedico($medicoId)
+            Internacion::delMedico($user->id)
                 ->activas()
                 ->with(['paciente', 'ocupacionActiva.cama.sala'])
                 ->latest('fecha_ingreso')
