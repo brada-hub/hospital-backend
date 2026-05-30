@@ -45,6 +45,7 @@ class HospitalCompletoSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         CuidadoAplicado::truncate();
         Consume::truncate();
+        \App\Models\AlimentacionTiempo::truncate();
         Alimentacion::truncate();
         Administra::truncate();
         Receta::truncate();
@@ -55,6 +56,7 @@ class HospitalCompletoSeeder extends Seeder
         Ocupacion::truncate();
         Internacion::truncate();
         Paciente::truncate(); // ✅ Limpiar absolutamente todos los pacientes
+        Antropometria::truncate();
 
         // ✅ LIMPIAR PACIENTES Y SUS USUARIOS
         $pacienteRolTemp = Rol::where('nombre', 'PACIENTE')->first();
