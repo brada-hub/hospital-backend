@@ -147,10 +147,9 @@ class DatabaseSeeder extends Seeder
         $nutricionistaRol->permissions()->sync(
             $permissions->whereIn('nombre', [
                 'acceso.dashboard',
+                'acceso.pacientes',
+                'acceso.mis-pacientes',
                 'acceso.panel-internacion',
-
-
-                'acceso.nutricion',     // Permiso clave
             ])->pluck('id')
         );
 
