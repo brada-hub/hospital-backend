@@ -286,9 +286,42 @@ class ReporteController extends Controller
 
         foreach ($internacion->tratamientos as $tratamiento) {
             foreach ($tratamiento->recetas as $receta) {
-                $totalDosis = $receta->administras->count();
-                $dosisAdministradas = $receta->administras->where('estado', 1)->count();
-                $dosisRetrasadas = $receta->administras->where('estado', 2)->count();
+                $estadoReceta = $receta->estado; // 0 = activo, 1 = suspendido, 2 = finalizado
+                $motivoSuspension = null;
+                $fechaSuspension = null;
+
+                // Si la receta o el tratamiento padre están suspendidos
+                if ($receta->estado === 1 || $tratamiento->estado === 1) {
+                    $estadoReceta = 1;
+                    
+                    // Buscar motivo en las indicaciones de la receta
+                    if (preg_match('/SUSPENDIDO\s*\((\d{2}\/\d{2}\/\d{4})\):\s*(.+)$/is', $receta->indicaciones, $matches)) {
+                        $fechaSuspension = \Carbon\Carbon::createFromFormat('d/m/Y', $matches[1])->endOfDay();
+                        $motivoSuspension = trim($matches[2]);
+                    } 
+                    // O en las observaciones del tratamiento
+                    elseif (preg_match('/SUSPENDIDO\s*\((\d{2}\/\d{2}\/\d{4})\):\s*(.+)$/is', $tratamiento->observaciones, $matches)) {
+                        $fechaSuspension = \Carbon\Carbon::createFromFormat('d/m/Y', $matches[1])->endOfDay();
+                        $motivoSuspension = trim($matches[2]);
+                    }
+                }
+
+                $administras = $receta->administras;
+                $dosisAdministradas = $administras->where('estado', 1)->count();
+                $dosisRetrasadas = $administras->where('estado', 2)->count();
+
+                if ($estadoReceta === 1 && $fechaSuspension) {
+                    // Contamos como esperadas solo las programadas antes o el día de la suspensión,
+                    // o que ya fueron administradas de todos modos.
+                    $esperadas = $administras->filter(function ($ap) use ($fechaSuspension) {
+                        return \Carbon\Carbon::parse($ap->hora_programada)->lessThanOrEqualTo($fechaSuspension) 
+                            || $ap->estado === 1 
+                            || $ap->estado === 2;
+                    });
+                    $totalDosis = $esperadas->count();
+                } else {
+                    $totalDosis = $administras->count();
+                }
 
                 $resumen[] = [
                     'medicamento' => $receta->medicamento->nombre,
@@ -300,6 +333,9 @@ class ReporteController extends Controller
                     'dosis_administradas' => $dosisAdministradas,
                     'dosis_retrasadas' => $dosisRetrasadas,
                     'adherencia' => $totalDosis > 0 ? round(($dosisAdministradas / $totalDosis) * 100, 1) : 0,
+                    'estado' => $estadoReceta,
+                    'motivo_suspension' => $motivoSuspension,
+                    'fecha_suspension' => $fechaSuspension ? $fechaSuspension->format('d/m/Y') : null,
                 ];
             }
         }

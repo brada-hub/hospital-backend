@@ -513,13 +513,27 @@
                     @foreach($resumenMedicamentos as $med)
                         @php
                             $ad = $med['adherencia'];
-                            $isLowAdherencia = $ad < 60;
-                            $rowStyle = $isLowAdherencia ? 'background-color: #f8fafc;' : '';
+                            $isSuspended = $med['estado'] === 1;
+                            $isLowAdherencia = !$isSuspended && $ad < 60;
+                            
+                            $rowStyle = '';
+                            if ($isSuspended) {
+                                $rowStyle = 'background-color: #f8fafc; border-left: 3.5px solid #0f172a;';
+                            } elseif ($isLowAdherencia) {
+                                $rowStyle = 'background-color: #fafbfc;';
+                            }
                         @endphp
                         <tr style="{{ $rowStyle }}">
                             <td style="font-weight: bold;">
                                 {{ $med['medicamento'] }}
-                                @if($isLowAdherencia)
+                                @if($isSuspended)
+                                    <span style="display: block; font-size: 7pt; font-weight: bold; color: #0f172a; margin-top: 1px; text-transform: uppercase;">[DISCONTINUADO CLÍNICAMENTE]</span>
+                                    @if($med['motivo_suspension'])
+                                        <span style="display: block; font-size: 7.2pt; font-weight: normal; color: #475569; font-style: italic; margin-top: 2px;">
+                                            Motivo: "{{ $med['motivo_suspension'] }}"
+                                        </span>
+                                    @endif
+                                @elseif($isLowAdherencia)
                                     <span style="display: block; font-size: 7pt; font-weight: bold; color: #0f172a; margin-top: 1px;">[ALERTA: BAJA ADHERENCIA]</span>
                                 @endif
                             </td>
@@ -527,10 +541,17 @@
                             <td>{{ $med['via'] }}</td>
                             <td>{{ $med['frecuencia'] }} <br /><span style="font-size: 7pt; color: #475569;">durante {{ $med['duracion'] }}</span></td>
                             <td>
-                                <strong>{{ $ad }}%</strong>
-                                <div style="font-size: 7pt; color: #475569; margin-top: 1px;">
-                                    {{ $med['dosis_administradas'] }} de {{ $med['total_dosis'] }} aplicadas
-                                </div>
+                                @if($isSuspended)
+                                    <strong>{{ $ad }}%</strong> (Parcial)
+                                    <div style="font-size: 7pt; color: #475569; margin-top: 1px;">
+                                        Administrado: {{ $med['dosis_administradas'] }} de {{ $med['total_dosis'] }} antes de la suspensión el {{ $med['fecha_suspension'] }}
+                                    </div>
+                                @else
+                                    <strong>{{ $ad }}%</strong>
+                                    <div style="font-size: 7pt; color: #475569; margin-top: 1px;">
+                                        {{ $med['dosis_administradas'] }} de {{ $med['total_dosis'] }} aplicadas
+                                    </div>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
