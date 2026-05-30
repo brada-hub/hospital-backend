@@ -119,7 +119,7 @@ class PacienteController extends Controller
 
     public function show($id)
     {
-        $paciente = Paciente::with(['internacionActiva', 'user'])->findOrFail($id);
+        $paciente = Paciente::with(['internaciones.medico', 'internacionActiva', 'user'])->findOrFail($id);
         return $paciente;
     }
 

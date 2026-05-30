@@ -109,11 +109,11 @@ class DatabaseSeeder extends Seeder
         // --- Permisos ---
         $permissions = [
             ['nombre' => 'acceso.dashboard', 'descripcion' => 'Acceso a la página principal del dashboard'],
-            ['nombre' => 'acceso.gestion-hospital', 'descripcion' => 'Acceso a la página de gestión del hospital'],
+            ['nombre' => 'acceso.hospital', 'descripcion' => 'Acceso a la página de gestión del hospital'],
             ['nombre' => 'acceso.pacientes', 'descripcion' => 'Acceso a la página de gestión de pacientes'],
             ['nombre' => 'acceso.admision', 'descripcion' => 'Acceso al módulo de admisión e internación'],
             ['nombre' => 'acceso.medicamentos', 'descripcion' => 'Acceso a la gestión de medicamentos y categorías'],
-            ['nombre' => 'acceso.usuarios-y-roles', 'descripcion' => 'Acceso a la página de gestión de usuarios y roles'],
+            ['nombre' => 'acceso.usuarios-roles', 'descripcion' => 'Acceso a la página de gestión de usuarios y roles'],
             ['nombre' => 'acceso.panel-internacion', 'descripcion' => 'Acceso al panel de control de un paciente internado'],
             ['nombre' => 'acceso.mis-pacientes', 'descripcion' => 'Acceso a la vista de pacientes asignados al médico'],
             ['nombre' => 'acceso.estacion-enfermeria', 'descripcion' => 'Acceso a la Estación de Enfermería'],
@@ -165,8 +165,8 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'admin'],
             [
-                'nombre' => 'Admin',
-                'apellidos' => 'Principal',
+                'nombre' => 'Brayan',
+                'apellidos' => 'Padilla',
                 'telefono' => 77777777,
                 'password' => Hash::make('12345678'),
                 'rol_id' => $adminRol->id,
@@ -177,8 +177,8 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'medico'],
             [
-                'nombre' => 'Doctor',
-                'apellidos' => 'Smith',
+                'nombre' => 'Dr. Carlos',
+                'apellidos' => 'Vegas',
                 'telefono' => 60001111,
                 'password' => Hash::make('12345678'),
                 'rol_id' => $medicoRol->id,

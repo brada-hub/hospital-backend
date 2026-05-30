@@ -27,6 +27,7 @@ class ReporteController extends Controller
             'controles.user',
             'controles.valores.signo',
             'cuidados.cuidadosAplicados.user',
+            'antropometria',
         ])->findOrFail($internacionId);
 
         // Calcular días de estancia
@@ -46,7 +47,13 @@ class ReporteController extends Controller
 
         // Evolución clínica resumida
         $evolucionClinica = $internacion->controles
-            ->where('tipo', 'Evolución Médica')
+            ->whereIn('tipo', ['Evolución Médica', 'Evolución'])
+            ->sortBy('fecha_control')
+            ->values();
+
+        // Historial completo de signos vitales (excluyendo notas de evolución)
+        $historialControles = $internacion->controles
+            ->whereNotIn('tipo', ['Evolución Médica', 'Evolución'])
             ->sortBy('fecha_control')
             ->values();
 
@@ -63,6 +70,7 @@ class ReporteController extends Controller
             'diasEstancia' => $diasEstancia,
             'signosIngreso' => $signosIngreso,
             'signosEgreso' => $signosEgreso,
+            'historialControles' => $historialControles,
             'resumenMedicamentos' => $resumenMedicamentos,
             'resumenAlimentacion' => $resumenAlimentacion,
             'evolucionClinica' => $evolucionClinica,
@@ -82,12 +90,6 @@ class ReporteController extends Controller
     public function generarEpicrisis($internacionId)
     {
         $internacion = Internacion::findOrFail($internacionId);
-
-        if (!$internacion->fecha_alta) {
-            return response()->json([
-                'message' => 'No se puede generar epicrisis de una internación activa.'
-            ], 400);
-        }
 
         $pdf = $this->obtenerPdfEpicrisis($internacionId);
         $nombrePaciente = $internacion->paciente?->nombre ?? 'Paciente';

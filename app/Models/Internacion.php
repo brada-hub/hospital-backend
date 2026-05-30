@@ -20,6 +20,8 @@ class Internacion extends Model
         'observaciones',
         'paciente_id',
         'user_id', // médico que internó al paciente
+        'tipo_alta',
+        'observaciones_alta',
     ];
 
     protected $casts = [
@@ -56,6 +58,11 @@ class Internacion extends Model
     public function controles()
     {
         return $this->hasMany(Control::class);
+    }
+
+    public function antropometria()
+    {
+        return $this->hasOne(Antropometria::class);
     }
 
     public function alimentaciones()

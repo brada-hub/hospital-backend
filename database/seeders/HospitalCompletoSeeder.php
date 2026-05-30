@@ -24,6 +24,7 @@ use App\Models\TipoDieta;
 use App\Models\Consume;
 use App\Models\Cuidado;
 use App\Models\CuidadoAplicado;
+use App\Models\Antropometria;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -53,12 +54,12 @@ class HospitalCompletoSeeder extends Seeder
         Control::truncate();
         Ocupacion::truncate();
         Internacion::truncate();
+        Paciente::truncate(); // ✅ Limpiar absolutamente todos los pacientes
 
         // ✅ LIMPIAR PACIENTES Y SUS USUARIOS
         $pacienteRolTemp = Rol::where('nombre', 'PACIENTE')->first();
         if ($pacienteRolTemp) {
             $usuariosPacientes = User::where('rol_id', $pacienteRolTemp->id)->pluck('id');
-            Paciente::whereIn('user_id', $usuariosPacientes)->delete();
             User::whereIn('id', $usuariosPacientes)->delete();
         }
 
@@ -87,50 +88,11 @@ class HospitalCompletoSeeder extends Seeder
 
     private function crearPersonalMedico()
     {
-        $medicoRol = Rol::where('nombre', 'MÉDICO')->first();
-        $enfermeraRol = Rol::where('nombre', 'ENFERMERA')->first();
+        $medico = User::where('email', 'medico')->first();
+        $enfermera = User::where('email', 'enfermera')->first();
 
-        // Crear 3 médicos adicionales (para demo: 3 total)
-        $nombresMedicos = [
-            ['nombre' => 'Carlos', 'apellidos' => 'Rodríguez García', 'email' => 'carlos.rodriguez@hospital.com'],
-            ['nombre' => 'Ana', 'apellidos' => 'Martínez López', 'email' => 'ana.martinez@hospital.com'],
-            ['nombre' => 'Roberto', 'apellidos' => 'Fernández Silva', 'email' => 'roberto.fernandez@hospital.com'],
-        ];
-
-        foreach ($nombresMedicos as $index => $data) {
-            $this->medicos[] = User::firstOrCreate(
-                ['email' => $data['email']],
-                [
-                    'nombre' => $data['nombre'],
-                    'apellidos' => $data['apellidos'],
-                    'telefono' => 60001000 + $index,
-                    'password' => Hash::make('12345678'),
-                    'rol_id' => $medicoRol->id,
-                    'hospital_id' => $this->hospital->id
-                ]
-            );
-        }
-
-        // Crear 3 enfermeras (para demo: 3 total)
-        $nombresEnfermeras = [
-            ['nombre' => 'María', 'apellidos' => 'López Vargas', 'email' => 'maria.lopez@hospital.com'],
-            ['nombre' => 'Carmen', 'apellidos' => 'Díaz Rojas', 'email' => 'carmen.diaz@hospital.com'],
-            ['nombre' => 'Patricia', 'apellidos' => 'Ruiz Castro', 'email' => 'patricia.ruiz@hospital.com'],
-        ];
-
-        foreach ($nombresEnfermeras as $index => $data) {
-            $this->enfermeras[] = User::firstOrCreate(
-                ['email' => $data['email']],
-                [
-                    'nombre' => $data['nombre'],
-                    'apellidos' => $data['apellidos'],
-                    'telefono' => 70002000 + $index,
-                    'password' => Hash::make('12345678'),
-                    'rol_id' => $enfermeraRol->id,
-                    'hospital_id' => $this->hospital->id
-                ]
-            );
-        }
+        $this->medicos = $medico ? [$medico] : [];
+        $this->enfermeras = $enfermera ? [$enfermera] : [];
     }
 
     private function crearEspecialidades()
@@ -157,10 +119,11 @@ class HospitalCompletoSeeder extends Seeder
                 ['tipo' => 'Sala de Internación', 'estado' => true]
             );
 
-            // Crear exactamente 5 camas por sala (25 camas totales)
+            // Crear exactamente 5 camas por sala (25 camas totales: 101-105, 201-205, etc.)
             for ($j = 1; $j <= 5; $j++) {
+                $numeroCama = ($index + 1) * 100 + $j;
                 Cama::firstOrCreate(
-                    ['nombre' => "Cama " . ($index + 1) . "-" . $j, 'sala_id' => $sala->id],
+                    ['nombre' => "Cama " . $numeroCama, 'sala_id' => $sala->id],
                     ['tipo' => 'Estándar', 'estado' => true, 'disponibilidad' => true]
                 );
             }
@@ -194,22 +157,8 @@ class HospitalCompletoSeeder extends Seeder
                 $especialidad = $especialidades[0]; // Fallback a la primera especialidad
             }
 
-            // Crear usuario para el primer paciente para poder probar el portal
+            // No creamos usuario para el paciente ya que "Mi Internación" está descontinuado
             $userId = null;
-            if ($index === 0) {
-                $userPaciente = User::firstOrCreate(
-                    ['email' => 'paciente@hospital.com'],
-                    [
-                        'nombre' => $pData['nombre'],
-                        'apellidos' => $pData['apellidos'],
-                        'telefono' => $pData['telefono'],
-                        'password' => Hash::make('12345678'),
-                        'rol_id' => $this->pacienteRol->id,
-                        'hospital_id' => $this->hospital->id
-                    ]
-                );
-                $userId = $userPaciente->id;
-            }
 
             // Crear paciente
             $paciente = Paciente::firstOrCreate(
@@ -239,8 +188,8 @@ class HospitalCompletoSeeder extends Seeder
                 continue;
             }
 
-            // Crear internación
-            $medico = $this->medicos[array_rand($this->medicos)];
+            // Crear internación (Asignar al médico demo principal: Dr. Vegas)
+            $medico = User::where('email', 'medico')->first() ?: $this->medicos[array_rand($this->medicos)];
             $fechaIngreso = Carbon::now()->subDays(rand(1, 7))->subHours(rand(0, 23));
 
             $internacion = Internacion::create([
@@ -258,6 +207,15 @@ class HospitalCompletoSeeder extends Seeder
                 'internacion_id' => $internacion->id,
             ]);
             $cama->update(['disponibilidad' => false]);
+
+            // Registrar Antropometría Inicial (Peso y Altura aislados en su propia tabla)
+            $pesoVal = 50 + rand(0, 50);
+            $alturaVal = 150 + rand(0, 35);
+            $internacion->antropometria()->create([
+                'peso' => $pesoVal,
+                'altura' => $alturaVal,
+                'observaciones' => 'Registro antropométrico inicial de ingreso.',
+            ]);
 
             // Registrar signos vitales (4-5 controles)
             $this->registrarSignosVitales($internacion, $fechaIngreso);
@@ -289,10 +247,8 @@ class HospitalCompletoSeeder extends Seeder
                 'observaciones' => $i === 0 ? 'Registro inicial de signos vitales' : 'Control de seguimiento',
             ]);
 
-            // Valores realistas de signos vitales
+            // Valores realistas de signos vitales (se excluyen Peso y Altura para Antropometría)
             $valores = [
-                'Altura' => 160 + rand(0, 30),
-                'Peso' => 50 + rand(0, 50),
                 'Frecuencia Cardíaca' => 60 + rand(0, 40),
                 'Frecuencia Respiratoria' => 12 + rand(0, 12),
                 'Glucosa Capilar' => 80 + rand(0, 60),

@@ -54,12 +54,11 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'timezone' => '-04:00', // 👈 fuerza a Bolivia (La Paz)
+            'timezone' => '-04:00',
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                \Pdo\Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
-
 
         'mariadb' => [
             'driver' => 'mariadb',
@@ -77,7 +76,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                \Pdo\Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'), // 👈 Corregido aquí también
             ]) : [],
         ],
 

@@ -99,6 +99,7 @@ class InternacionController extends Controller
             'paciente',
             'medico',
             'ocupacionActiva.cama.sala',
+            'antropometria',
 
             'tratamientos' => function ($query) {
                 // Cargar TODOS los tratamientos (activos e inactivos)
@@ -170,6 +171,7 @@ class InternacionController extends Controller
                 'paciente:id,nombre,apellidos,ci',
                 'medico:id,nombre,apellidos',
                 'ocupacionActiva.cama.sala:id,nombre',
+                'antropometria',
                 'tratamientos' => function ($query) {
                     $query->where('estado', 0)->with([
                         'medico:id,nombre,apellidos',
@@ -299,18 +301,24 @@ class InternacionController extends Controller
         return response()->json($internaciones);
     }
 
-    /**
-     * ✅ Da de alta al paciente y libera la cama.
-     */
-    public function darDeAlta(Internacion $internacion)
+    public function darDeAlta(Request $request, Internacion $internacion)
     {
         if ($internacion->fecha_alta) {
             return response()->json(['message' => 'El paciente ya fue dado de alta.'], 400);
         }
 
+        $data = $request->validate([
+            'tipo_alta' => 'required|string|max:100',
+            'observaciones_alta' => 'nullable|string|max:2000',
+        ]);
+
         try {
-            DB::transaction(function () use ($internacion) {
-                $internacion->update(['fecha_alta' => now()]);
+            DB::transaction(function () use ($internacion, $data) {
+                $internacion->update([
+                    'fecha_alta' => now(),
+                    'tipo_alta' => $data['tipo_alta'],
+                    'observaciones_alta' => $data['observaciones_alta'] ?? null,
+                ]);
 
                 $internacion->tratamientos()->where('estado', 0)->update(['estado' => 2]);
 
@@ -384,23 +392,13 @@ class InternacionController extends Controller
 
     private function calcularDatosAntropometricos(Internacion $internacion)
     {
+        $antropometria = $internacion->antropometria;
         $datos = ['peso' => 'No registrado', 'altura' => 'No registrada', 'imc' => null];
 
-        $controlDeIngreso = $internacion->controles
-            ->sortBy('fecha_control')
-            ->first(fn($c) => $c->valores->contains(fn($v) => in_array($v->signo->nombre, ['Peso', 'Altura'])));
-
-        if ($controlDeIngreso) {
-            $peso = $controlDeIngreso->valores->firstWhere('signo.nombre', 'Peso');
-            $altura = $controlDeIngreso->valores->firstWhere('signo.nombre', 'Altura');
-
-            if ($peso) $datos['peso'] = $peso->medida . ' ' . $peso->signo->unidad;
-            if ($altura) $datos['altura'] = $altura->medida . ' ' . $altura->signo->unidad;
-
-            if ($peso && $altura && is_numeric($peso->medida) && is_numeric($altura->medida) && $altura->medida > 0) {
-                $alturaM = $altura->medida / 100;
-                $datos['imc'] = round($peso->medida / ($alturaM ** 2), 1);
-            }
+        if ($antropometria) {
+            $datos['peso'] = $antropometria->peso . ' kg';
+            $datos['altura'] = $antropometria->altura . ' cm';
+            $datos['imc'] = $antropometria->imc;
         }
 
         $internacion->datos_antropometricos = $datos;

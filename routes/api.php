@@ -28,7 +28,8 @@ use App\Http\Controllers\{
     AlimentacionController,
     ConsumeController,
     NotificacionController,
-    ReporteController
+    ReporteController,
+    AntropometriaController
 };
 
 // ---------------------------
@@ -59,10 +60,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- INTERNACIONES ---
     Route::prefix('internaciones')->group(function () {
+        Route::get('mis-pacientes', [InternacionController::class, 'getMisPacientes']); // ✅ Compatibilidad con Frontend
         Route::get('{internacion}/vista-completa', [InternacionController::class, 'getVistaCompleta']);
         Route::post('{internacion}/dar-de-alta', [InternacionController::class, 'darDeAlta']);
         Route::put('{internacion}/alta', [InternacionController::class, 'darDeAlta']);
         Route::get('{id}/dashboard', [InternacionController::class, 'getDashboardData']);
+        Route::get('{internacionId}/antropometria', [AntropometriaController::class, 'show']); // ✅ Nueva ruta Antropometría
+        Route::post('{internacionId}/antropometria', [AntropometriaController::class, 'store']); // ✅ Nueva ruta Antropometría
     });
 
     Route::get('/mis-pacientes', [InternacionController::class, 'getMisPacientes']);

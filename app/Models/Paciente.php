@@ -42,6 +42,11 @@ class Paciente extends Model
             ->latest('fecha_ingreso');
     }
 
+    public function internaciones()
+    {
+        return $this->hasMany(Internacion::class)->orderBy('fecha_ingreso', 'desc');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

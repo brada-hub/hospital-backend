@@ -18,7 +18,7 @@ class MedicamentoController extends Controller
     {
         $data = $request->validate([
             'nombre'             => 'required|string|max:100|unique:medicamentos,nombre',
-            'descripcion'        => 'required|string|max:255',
+            'descripcion'        => 'nullable|string|max:255',
             'categoria_id'       => 'nullable|exists:medicamento_categorias,id',
             'stock'              => 'nullable|integer|min:0',
             'stock_critico'      => 'nullable|integer|min:0',
@@ -43,7 +43,7 @@ class MedicamentoController extends Controller
 
         $data = $request->validate([
             'nombre'             => 'required|string|max:100|unique:medicamentos,nombre,' . $medicamento->id,
-            'descripcion'        => 'required|string|max:255',
+            'descripcion'        => 'nullable|string|max:255',
             'categoria_id'       => 'nullable|exists:medicamento_categorias,id',
             'stock'              => 'nullable|integer|min:0',
             'stock_critico'      => 'nullable|integer|min:0',
